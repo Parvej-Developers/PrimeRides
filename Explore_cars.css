@@ -756,3 +756,114 @@ footer {
     background-color: transparent;
   }
 }
+
+/* ========== Custom Notification Styles ========== */
+.custom-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 300px;
+  max-width: 400px;
+  z-index: 10000;
+  transform: translateX(450px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.custom-notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.custom-notification i {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.custom-notification.success {
+  border-left: 4px solid #2563eb;
+}
+
+.custom-notification.success i {
+  color: #2563eb;
+}
+
+.custom-notification.error {
+  border-left: 4px solid #ef4444;
+}
+
+.custom-notification.error i {
+  color: #ef4444;
+}
+
+.custom-notification span {
+  flex: 1;
+  font-size: 15px;
+  color: #1e293b;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.custom-notification .notification-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.custom-notification .notification-close:hover {
+  color: #1e293b;
+}
+
+.custom-notification .notification-close i {
+  font-size: 20px;
+}
+
+/* Mobile responsive for notifications */
+@media (max-width: 768px) {
+  .custom-notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    max-width: none;
+    transform: translateY(-150px);
+    padding: 14px 16px;
+  }
+
+  .custom-notification.show {
+    transform: translateY(0);
+  }
+
+  .custom-notification span {
+    font-size: 14px;
+  }
+
+  .custom-notification i {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-notification {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .custom-notification span {
+    font-size: 13px;
+  }
+}

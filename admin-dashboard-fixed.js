@@ -471,20 +471,33 @@ function initAddCarForm() {
 // Load Dashboard Stats
 async function loadDashboardStats() {
     try {
-        const { data: cars, error } = await window.supabaseClient
+        // Fetch cars data
+        const { data: cars, error: carsError } = await window.supabaseClient
             .from('cars')
             .select('status');
 
-        if (error) {
-            console.error('Error loading stats:', error);
-            return;
+        if (carsError) {
+            console.error('Error loading cars stats:', carsError);
         }
 
+        // Fetch bookings data
+        const { data: bookings, error: bookingsError } = await window.supabaseClient
+            .from('bookings')
+            .select('id');
+
+        if (bookingsError) {
+            console.error('Error loading bookings stats:', bookingsError);
+        }
+
+        // Calculate car stats
         const totalCars = cars?.length || 0;
         const availableCars = cars?.filter(car => car.status !== 'unavailable').length || 0;
         const unavailableCars = totalCars - availableCars;
 
-        // Update dashboard stats
+        // Calculate booking stats
+        const totalBookings = bookings?.length || 0;
+
+        // Update dashboard stats - Cars
         const totalCarsElement = document.getElementById('totalCarsCount');
         const availableCarsElement = document.getElementById('availableCarsCount');
         const unavailableCarsElement = document.getElementById('unavailableCarsCount');
@@ -493,7 +506,11 @@ async function loadDashboardStats() {
         if (availableCarsElement) availableCarsElement.textContent = availableCars;
         if (unavailableCarsElement) unavailableCarsElement.textContent = unavailableCars;
 
-        // Update change indicators
+        // Update dashboard stats - Bookings
+        const totalBookingsElement = document.getElementById('totalBookingsCount');
+        if (totalBookingsElement) totalBookingsElement.textContent = totalBookings;
+
+        // Update change indicators - Cars
         const totalCarsChange = document.getElementById('totalCarsChange');
         const availableCarsChange = document.getElementById('availableCarsChange');
         const unavailableCarsChange = document.getElementById('unavailableCarsChange');
@@ -501,6 +518,17 @@ async function loadDashboardStats() {
         if (totalCarsChange) totalCarsChange.textContent = `${totalCars} total cars`;
         if (availableCarsChange) availableCarsChange.textContent = `${availableCars} ready to rent`;
         if (unavailableCarsChange) unavailableCarsChange.textContent = `${unavailableCars} need attention`;
+
+        // Update change indicators - Bookings
+        const totalBookingsChange = document.getElementById('totalBookingsChange');
+        if (totalBookingsChange) totalBookingsChange.textContent = `${totalBookings} total bookings`;
+
+        console.log('Dashboard stats loaded:', {
+            totalCars,
+            availableCars,
+            unavailableCars,
+            totalBookings
+        });
 
     } catch (error) {
         console.error('Error loading dashboard stats:', error);
