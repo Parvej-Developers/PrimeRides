@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>Car Rental - Policy Center</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: linear-gradient(90deg, #eaf4ff 60%, #cce2ff 100%);
+        font-family: "Montserrat", Arial, sans-serif;
+        color: #122267;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+
+      .wrapper {
+        display: flex;
+        width: 100%;
+      }
+
+      /* Fixed sidebar to cover full screen height */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 240px;
+        background: #045de9;
+        color: #fff;
+        box-shadow: 2px 0 14px 0 #002a6f19;
+        display: flex;
+        flex-direction: column;
+        padding-top: 45px;
+        gap: 12px;
+      }
+
+      .sidebar-title {
+        text-align: center;
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 34px;
+      }
+
+      .sidebar-btn {
+        display: flex;
+        align-items: center;
+        background: none;
+        border: none;
+        color: inherit;
+        font-size: 17px;
+        padding: 14px 30px;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.22s, color 0.22s;
+        border-radius: 0 20px 20px 0;
+        font-weight: 500;
+        outline: none;
+        gap: 10px;
+      }
+
+      .sidebar-btn.active,
+      .sidebar-btn:hover {
+        background: linear-gradient(90deg, #429be7cc 70%, #045de9 100%);
+        color: #fff;
+        box-shadow: 1px 2px 11px 0 #0d197017;
+      }
+
+      /* Main content */
+      .main-content {
+        margin-left: 240px; /* same as sidebar width */
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 56px 30px;
+      }
+
+      .home-btn {
+        align-self: flex-start;
+        margin-bottom: 20px;
+        background: #045de9;
+        color: #fff;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: background 0.2s ease;
+      }
+
+      .home-btn:hover {
+        background: #023ea4;
+      }
+
+      h1 {
+        margin-bottom: 32px;
+        color: #045de9;
+        font-weight: 700;
+        font-size: 32px;
+      }
+
+      .cards {
+        width: 100%;
+        max-width: 700px;
+        display: flex;
+        flex-direction: column;
+        gap: 38px;
+        position: relative;
+      }
+
+      .policy-card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 4px 17px 0 #00276611;
+        padding: 34px 34px 27px 34px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+
+      .policy-card.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+        box-shadow: 0 8px 32px 0 #136ad924;
+        z-index: 10;
+      }
+
+      .card-title {
+        display: flex;
+        align-items: center;
+        font-size: 23px;
+        font-weight: 700;
+        color: #166bd2;
+        margin-bottom: 16px;
+        gap: 8px;
+      }
+
+      ul {
+        color: #242b4e;
+        margin-left: 25px;
+        margin-bottom: 0;
+        font-size: 17px;
+        line-height: 1.8;
+      }
+
+      .note {
+        font-size: 15px;
+        color: #2d69c7;
+        background: #eaf4ff;
+        padding: 14px 19px;
+        border-radius: 8px;
+        margin-top: 19px;
+        margin-bottom: 9px;
+        box-shadow: 0 2px 14px #045de919;
+      }
+
+      /* Tablet & small desktop */
+      @media (max-width: 900px) {
+        .main-content {
+          margin-left: 60px;
+          padding: 30px 14px;
+        }
+
+        .cards {
+          max-width: 98vw;
+        }
+
+        .sidebar {
+          width: 60px;
+          padding-top: 16px;
+        }
+
+        .sidebar-btn {
+          font-size: 0;
+          padding: 12px !important;
+          justify-content: center;
+          border-radius: 50%;
+        }
+
+        .sidebar-title {
+          font-size: 0;
+        }
+      }
+
+      /* Phone portrait */
+      @media (max-width: 600px) {
+        .wrapper {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          position: relative;
+          width: 100%;
+          height: auto;
+          flex-direction: row;
+          padding: 10px;
+          justify-content: space-around;
+        }
+
+        .sidebar-btn {
+          border-radius: 8px;
+          font-size: 16px;
+          padding: 8px 12px !important;
+          width: auto;
+          text-align: center;
+        }
+
+        .sidebar-title {
+          display: none;
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 20px 10px;
+        }
+
+        .home-btn {
+          margin-bottom: 16px;
+          font-size: 14px;
+          padding: 8px 16px;
+        }
+
+        .cards {
+          gap: 24px;
+        }
+      }
+      /* 1. Sliding-in animation */
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* 2. Apply animation on .policy-card.active */
+      .policy-card.active {
+        animation: slideIn 0.5s ease-out;
+      }
+
+      /* 3. Loading overlay */
+      #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #ffffffcc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        transition: opacity 0.4s ease;
+      }
+      #loadingOverlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Simple spinner */
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 6px solid #ddd;
+        border-top-color: #045de9;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Add at top of <body> -->
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="wrapper">
+      <nav class="sidebar">
+        <div class="sidebar-title">Policies</div>
+        <button
+          class="sidebar-btn active"
+          onclick="showCard('returnCard')"
+          id="returnBtn"
+        >
+          🔁 Return Policy
+        </button>
+        <button
+          class="sidebar-btn"
+          onclick="showCard('refundCard')"
+          id="refundBtn"
+        >
+          💸 Refund Policy
+        </button>
+        <button
+          class="sidebar-btn"
+          onclick="showCard('termsCard')"
+          id="termsBtn"
+        >
+          📜 Terms & Conditions
+        </button>
+      </nav>
+
+      <main class="main-content">
+        <a class="home-btn" href="index.html">🏠 Go to Home</a>
+        <h1>Return, Refund & Terms</h1>
+        <section class="cards">
+          <!-- Return Policy -->
+          <div class="policy-card active" id="returnCard">
+            <div class="card-title">🔁 Return Policy</div>
+            <ul>
+              <li>
+                Return vehicles by the agreed date and time at the specified
+                location.
+              </li>
+              <li>
+                Return the vehicle in the same condition as rented, excluding
+                normal wear and tear.
+              </li>
+              <li>
+                Late returns incur extra charges per the hourly/daily rate.
+              </li>
+              <li>Excessive dirt may result in a cleaning fee.</li>
+              <li>
+                Refill fuel to the original level, or refueling charges will
+                apply.
+              </li>
+              <li>
+                Damage, missing parts, or loss will be charged as per actual
+                repair or replacement cost.
+              </li>
+              <li>
+                Inspection with our representative is recommended at return.
+              </li>
+            </ul>
+          </div>
+
+          <!-- Refund Policy -->
+          <div class="policy-card" id="refundCard">
+            <div class="card-title">💸 Refund Policy</div>
+            <ul>
+              <li>
+                Full refund for cancellations at least 48 hours before pickup.
+              </li>
+              <li>25% fee for cancellations within 48 hours of pickup.</li>
+              <li>
+                No refunds for cancellations after scheduled pickup or no-shows.
+              </li>
+              <li>Modifications subject to price and availability.</li>
+              <li>
+                If the vehicle is unavailable, a full refund or replacement will
+                be offered.
+              </li>
+              <li>
+                Refunds processed within 7–10 business days to the original
+                payment method.
+              </li>
+            </ul>
+            <div class="note">
+              For any questions or special cases, please contact our support
+              team.
+            </div>
+          </div>
+
+          <!-- Terms & Conditions -->
+          <div class="policy-card" id="termsCard">
+            <div class="card-title">📜 Terms & Conditions</div>
+            <ul>
+              <li>
+                <b>Eligibility:</b> Renter must be at least 18 years old with a
+                valid driving license and government ID.
+              </li>
+              <li>
+                <b>Booking & Payment:</b> Full payment before trip; prices
+                exclude tolls, fuel, and late fees.
+              </li>
+              <li>
+                <b>Vehicle Usage:</b> Use for personal purposes only; no illegal
+                or commercial use; keep it clean.
+              </li>
+              <li>
+                <b>Fuel Policy:</b> Return with the same fuel level as received;
+                missing fuel will be charged at market rates.
+              </li>
+              <li>
+                <b>Damage & Accidents:</b> Renter bears responsibility for
+                damages; must inform company immediately after incidents.
+              </li>
+              <li>
+                <b>Late Return:</b> Grace period of 30 minutes; beyond that,
+                hourly or daily rates apply.
+              </li>
+              <li>
+                <b>Cancellation & Refund:</b> Full refund if canceled 24 hours
+                before pickup; otherwise, fees may apply.
+              </li>
+              <li>
+                <b>Company Rights:</b> Company may refuse or cancel bookings due
+                to unavailability or misuse.
+              </li>
+              <li>
+                <b>Customer Responsibility:</b> Follow all traffic rules; fines
+                or violations are customer’s responsibility.
+              </li>
+              <li>
+                <b>Agreement:</b> By booking, you agree to all these terms and
+                conditions.
+              </li>
+            </ul>
+            <div class="note">
+              Please review all conditions carefully before confirming your
+              booking.
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      function showCard(cardId) {
+        const cards = document.querySelectorAll(".policy-card");
+        const buttons = document.querySelectorAll(".sidebar-btn");
+
+        cards.forEach((c) => c.classList.remove("active"));
+        buttons.forEach((b) => b.classList.remove("active"));
+
+        document.getElementById(cardId).classList.add("active");
+        if (cardId === "returnCard")
+          document.getElementById("returnBtn").classList.add("active");
+        if (cardId === "refundCard")
+          document.getElementById("refundBtn").classList.add("active");
+        if (cardId === "termsCard")
+          document.getElementById("termsBtn").classList.add("active");
+      }
+
+      // Hide loading overlay after DOM loads
+      window.addEventListener("DOMContentLoaded", () => {
+        const overlay = document.getElementById("loadingOverlay");
+        setTimeout(() => overlay.classList.add("hidden"), 600);
+      });
+
+      function showCard(cardId) {
+        const cards = document.querySelectorAll(".policy-card");
+        const buttons = document.querySelectorAll(".sidebar-btn");
+
+        cards.forEach((c) => c.classList.remove("active"));
+        buttons.forEach((b) => b.classList.remove("active"));
+
+        const card = document.getElementById(cardId);
+        card.classList.add("active");
+        // re-trigger animation
+        void card.offsetWidth;
+
+        if (cardId === "returnCard")
+          document.getElementById("returnBtn").classList.add("active");
+        if (cardId === "refundCard")
+          document.getElementById("refundBtn").classList.add("active");
+        if (cardId === "termsCard")
+          document.getElementById("termsBtn").classList.add("active");
+      }
+    </script>
+  </body>
+</html>

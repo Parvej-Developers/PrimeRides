@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Panel - PrimeRides</title>
+    <link rel="stylesheet" href="user-panel.css" />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@supabase/supabase-js@2.38.4/dist/umd/supabase.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  </head>
+  <body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="menuToggle">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="profile-img">
+          <i class="ri-user-3-line" style="font-size: 2rem"></i>
+        </div>
+        <h2 class="user-name">Loading...</h2>
+        <span class="user-badge">User</span>
+      </div>
+
+      <div class="sidebar-nav">
+        <ul>
+          <li>
+            <a href="#" class="nav-link active" data-section="profile">
+              <i
+                class="ri-user-3-line"
+                style="font-size: 1.2em; vertical-align: middle"
+              ></i>
+              <span style="margin-left: 0.5em">Profile</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-section="bookings">
+              <i
+                class="ri-calendar-check-line"
+                style="font-size: 1.2em; vertical-align: middle"
+              ></i>
+              <span style="margin-left: 0.5em">My Bookings</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-section="update">
+              <i
+                class="ri-edit-2-line"
+                style="font-size: 1.2em; vertical-align: middle"
+              ></i>
+              <span style="margin-left: 0.5em">Update Profile</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="index.html" class="back-home-btn">
+          <i
+            class="ri-home-4-line"
+            style="font-size: 1.2em; vertical-align: middle"
+          ></i>
+          <span style="margin-left: 0.5em">Back to Home</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+      <!-- Profile Section -->
+
+      <section id="profile-section" class="page active">
+        <div class="profile-center">
+          <div class="profile-card-big">
+            <div class="profile-card-left">
+              <div class="profile-avatar">
+                <i class="ri-user-3-line"></i>
+              </div>
+              <div class="profile-basic">
+                <h2 class="profile-name">Hembo Tingor</h2>
+                <p class="profile-role">Web Designer</p>
+                <a
+                  href="user.html#update-section"
+                  class="profile-edit-btn"
+                  title="Edit Profile"
+                >
+                  <i class="ri-edit-2-line"></i>
+                </a>
+              </div>
+            </div>
+            <div class="profile-card-right">
+              <div class="profile-info-grid">
+                <div>
+                  <label>Email</label>
+                  <div class="profile-info-value">Not Provided</div>
+                </div>
+                <div>
+                  <label>Phone</label>
+                  <div class="profile-info-value">Not Provided</div>
+                </div>
+                <div>
+                  <label>Address</label>
+                  <div class="profile-info-value">Not Provided</div>
+                </div>
+                <div>
+                  <label>Date of Birth</label>
+                  <div class="profile-info-value">Not Provided</div>
+                </div>
+                <div>
+                  <label>Driver's License</label>
+                  <div class="profile-info-value">Not Provided</div>
+                </div>
+                <div>
+                  <label>Membership</label>
+                  <div class="profile-info-value">Basic</div>
+                </div>
+                <div>
+                  <label>Account Status</label>
+                  <div class="profile-info-value">Not Varified</div>
+                </div>
+                <div>
+                  <label>Joined On</label>
+                  <div class="profile-info-value">2023-01-15</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bookings Section -->
+      <section id="bookings-section" class="page">
+        <div class="page-header">
+          <div class="page-title">
+            <h1>My Bookings</h1>
+            <p>Track and manage your car rental bookings</p>
+          </div>
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+            <button class="filter-btn" data-filter="completed">
+              Completed
+            </button>
+            <button class="filter-btn" data-filter="cancelled">
+              Cancelled
+            </button>
+          </div>
+        </div>
+
+        <div class="bookings-container">
+          <div style="text-align: center; padding: 2rem">
+            <p>Loading bookings...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Update Profile Section -->
+      <section id="update-section" class="page">
+        <div class="form-center">
+          <div class="page-header">
+            <div class="page-title">
+              <h1>
+                <i
+                  class="ri-edit-2-line"
+                  style="
+                    font-size: 1.3em;
+                    vertical-align: middle;
+                    color: var(--primary);
+                  "
+                ></i>
+                <span style="margin-left: 0.4em">Update Profile</span>
+              </h1>
+              <p>Edit your personal information and preferences</p>
+            </div>
+          </div>
+
+          <div class="update-form">
+            <div class="update-form-glass">
+              <!-- ...your form as it is... -->
+              <form id="updateProfileForm">
+                <div class="form-section">
+                  <h3>
+                    <i
+                      class="ri-user-3-line"
+                      style="color: var(--primary); margin-right: 0.4em"
+                    ></i>
+                    Personal Details
+                  </h3>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="firstName">
+                        <i
+                          class="ri-user-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        id="firstName"
+                        name="firstName"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="lastName">
+                        <i
+                          class="ri-user-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        id="lastName"
+                        name="lastName"
+                        required
+                      />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="phone">
+                        <i
+                          class="ri-phone-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        Phone Number
+                      </label>
+                      <input type="tel" id="phone" name="phone" />
+                    </div>
+                    <div class="form-group">
+                      <label for="dateOfBirth">
+                        <i
+                          class="ri-calendar-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        Date of Birth
+                      </label>
+                      <input type="date" id="dateOfBirth" name="dateOfBirth" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <h3>
+                    <i
+                      class="ri-map-pin-line"
+                      style="color: var(--primary); margin-right: 0.4em"
+                    ></i>
+                    Address Information
+                  </h3>
+                  <div class="form-grid">
+                    <div class="form-group full-width">
+                      <label for="address">
+                        <i
+                          class="ri-road-map-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        Street Address
+                      </label>
+                      <input type="text" id="address" name="address" />
+                    </div>
+                    <div class="form-group">
+                      <label for="city">
+                        <i
+                          class="ri-building-2-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        City
+                      </label>
+                      <input type="text" id="city" name="city" />
+                    </div>
+                    <div class="form-group">
+                      <label for="state">
+                        <i
+                          class="ri-map-pin-user-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        State
+                      </label>
+                      <input type="text" id="state" name="state" />
+                    </div>
+                    <div class="form-group">
+                      <label for="zipCode">
+                        <i
+                          class="ri-mail-send-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        ZIP Code
+                      </label>
+                      <input type="text" id="zipCode" name="zipCode" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <h3>
+                    <i
+                      class="ri-car-line"
+                      style="color: var(--primary); margin-right: 0.4em"
+                    ></i>
+                    License & Emergency Contact
+                  </h3>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="licenseNumber">
+                        <i
+                          class="ri-id-card-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        Driver's License Number
+                      </label>
+                      <input
+                        type="text"
+                        id="licenseNumber"
+                        name="licenseNumber"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="emergencyContact">
+                        <i
+                          class="ri-user-heart-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        Emergency Contact Name
+                      </label>
+                      <input
+                        type="text"
+                        id="emergencyContact"
+                        name="emergencyContact"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="emergencyPhone">
+                        <i
+                          class="ri-phone-find-line"
+                          style="color: var(--primary); margin-right: 0.2em"
+                        ></i>
+                        Emergency Contact Phone
+                      </label>
+                      <input
+                        type="tel"
+                        id="emergencyPhone"
+                        name="emergencyPhone"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="resetForm()"
+                  >
+                    <i class="ri-refresh-line" style="margin-right: 0.3em"></i>
+                    Reset
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-3-line" style="margin-right: 0.3em"></i>
+                    Update Profile
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="supabaseClient.js"></script>
+    <script src="user-panel.js"></script>
+  </body>
+</html>
