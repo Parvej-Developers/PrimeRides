@@ -136,7 +136,7 @@
       }
 
       .sidebar-btn::before {
-        content: '';
+        content: "";
         position: absolute;
         left: 0;
         top: 0;
@@ -208,6 +208,8 @@
       .home-btn {
         align-self: flex-start;
         margin-bottom: 20px;
+        position: relative;
+        z-index: 1000;
         background: linear-gradient(135deg, #045de9 0%, #0351c9 100%);
         color: #fff;
         text-decoration: none;
@@ -343,7 +345,8 @@
       }
 
       @keyframes pulseNote {
-        0%, 100% {
+        0%,
+        100% {
           box-shadow: 0 3px 15px rgba(4, 93, 233, 0.2);
         }
         50% {
@@ -877,10 +880,12 @@
         const sidebar = document.getElementById("sidebar");
         const toggle = document.querySelector(".mobile-toggle");
 
-        if (window.innerWidth <= 768 && 
-            sidebar.classList.contains("active") &&
-            !sidebar.contains(e.target) && 
-            !toggle.contains(e.target)) {
+        if (
+          window.innerWidth <= 768 &&
+          sidebar.classList.contains("active") &&
+          !sidebar.contains(e.target) &&
+          !toggle.contains(e.target)
+        ) {
           closeSidebar();
         }
       });
