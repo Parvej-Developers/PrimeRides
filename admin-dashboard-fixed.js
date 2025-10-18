@@ -222,7 +222,7 @@ function renderCars(cars) {
                     </div>
                     <div class="car-details">
                         <strong>${car.name || 'Unknown Car'}</strong>
-                        <small>${car.type || ''} â€¢ ${car.fuel || ''} â€¢ ${car.transmission || ''}</small>
+                        <small>${car.type || ''} ‚ ${car.fuel || ''} ‚ ${car.transmission || ''}</small>
                     </div>
                 </div>
                 <div class="car-price">${car.price || 'N/A'}</div>
@@ -470,6 +470,11 @@ function initAddCarForm() {
 
 // Load Dashboard Stats
 async function loadDashboardStats() {
+    console.log('Loading dashboard stats from Supabase...');
+
+    // Wait for DOM to be fully ready
+    await new Promise(resolve => setTimeout(resolve, 150));
+
     try {
         // Fetch cars data
         const { data: cars, error: carsError } = await window.supabaseClient
@@ -478,6 +483,7 @@ async function loadDashboardStats() {
 
         if (carsError) {
             console.error('Error loading cars stats:', carsError);
+            return;
         }
 
         // Fetch bookings data
@@ -487,6 +493,7 @@ async function loadDashboardStats() {
 
         if (bookingsError) {
             console.error('Error loading bookings stats:', bookingsError);
+            return;
         }
 
         // Calculate car stats
@@ -497,33 +504,40 @@ async function loadDashboardStats() {
         // Calculate booking stats
         const totalBookings = bookings?.length || 0;
 
-        // Update dashboard stats - Cars
-        const totalCarsElement = document.getElementById('totalCarsCount');
-        const availableCarsElement = document.getElementById('availableCarsCount');
-        const unavailableCarsElement = document.getElementById('unavailableCarsCount');
+        // Helper function to safely update elements with retry
+        const updateElement = (id, value, retries = 3) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+                // Remove any loading classes
+                element.classList.remove('loading');
+                return true;
+            } else if (retries > 0) {
+                console.warn(`Element ${id} not found, retrying... (${retries} attempts left)`);
+                return false;
+            } else {
+                console.warn(`Element ${id} not found in DOM after retries`);
+                return false;
+            }
+        };
 
-        if (totalCarsElement) totalCarsElement.textContent = totalCars;
-        if (availableCarsElement) availableCarsElement.textContent = availableCars;
-        if (unavailableCarsElement) unavailableCarsElement.textContent = unavailableCars;
+        // Update dashboard stats - Cars
+        updateElement('totalCarsCount', totalCars);
+        updateElement('availableCarsCount', availableCars);
+        updateElement('unavailableCarsCount', unavailableCars);
 
         // Update dashboard stats - Bookings
-        const totalBookingsElement = document.getElementById('totalBookingsCount');
-        if (totalBookingsElement) totalBookingsElement.textContent = totalBookings;
+        updateElement('totalBookingsCount', totalBookings);
 
         // Update change indicators - Cars
-        const totalCarsChange = document.getElementById('totalCarsChange');
-        const availableCarsChange = document.getElementById('availableCarsChange');
-        const unavailableCarsChange = document.getElementById('unavailableCarsChange');
-
-        if (totalCarsChange) totalCarsChange.textContent = `${totalCars} total cars`;
-        if (availableCarsChange) availableCarsChange.textContent = `${availableCars} ready to rent`;
-        if (unavailableCarsChange) unavailableCarsChange.textContent = `${unavailableCars} need attention`;
+        updateElement('totalCarsChange', `${totalCars} total cars`);
+        updateElement('availableCarsChange', `${availableCars} ready to rent`);
+        updateElement('unavailableCarsChange', `${unavailableCars} need attention`);
 
         // Update change indicators - Bookings
-        const totalBookingsChange = document.getElementById('totalBookingsChange');
-        if (totalBookingsChange) totalBookingsChange.textContent = `${totalBookings} total bookings`;
+        updateElement('totalBookingsChange', `${totalBookings} total bookings`);
 
-        console.log('Dashboard stats loaded:', {
+        console.log('✅ Dashboard stats loaded successfully:', {
             totalCars,
             availableCars,
             unavailableCars,
@@ -531,7 +545,7 @@ async function loadDashboardStats() {
         });
 
     } catch (error) {
-        console.error('Error loading dashboard stats:', error);
+        console.error('❌ Error loading dashboard stats:', error);
     }
 }
 
@@ -596,7 +610,7 @@ async function loadBookings() {
 
     try {
         // Fetch bookings with car and user details using joins
-const { data: bookings, error } = await window.supabaseClient
+        const { data: bookings, error } = await window.supabaseClient
             .from('bookings')
             .select(`
                 *,
@@ -606,7 +620,7 @@ const { data: bookings, error } = await window.supabaseClient
                     type,
                     image_url
                 ),
-                users (
+                users!bookings_user_id_fkey (
                     id,
                     firstname,
                     lastname
@@ -640,10 +654,13 @@ function renderBookings(bookings) {
     const bookingsBody = document.querySelector('.bookings-body');
     
     bookingsBody.innerHTML = bookings.map(booking => {
-        const customerName = booking.users ? 
-            `${booking.users.firstname || ''} ${booking.users.lastname || ''}`.trim() : 
-            'Unknown Customer';
-        
+        // Handle user data with fallback and debugging
+   let customerName = 'Unknown Customer';
+    if (Array.isArray(booking.users) && booking.users.length > 0) {
+        customerName = `${booking.users[0].firstname || ''} ${booking.users[0].lastname || ''}`.trim() || 'Unknown Customer';
+    } else if (booking.users && typeof booking.users === 'object') {
+        customerName = `${booking.users.firstname || ''} ${booking.users.lastname || ''}`.trim() || 'Unknown Customer';
+    }
         const carName = booking.cars?.name || 'Unknown Car';
         const carType = booking.cars?.type || '';
         
@@ -822,7 +839,7 @@ function showBookingDetailsModal(booking) {
                         <h4>Vehicle Information</h4>
                         <p><strong>Car:</strong> ${carName}</p>
                         <p><strong>Type:</strong> ${booking.cars?.type || 'N/A'}</p>
-                        <p><strong>Daily Rate:</strong> â‚¹${booking.daily_rate || 'N/A'}</p>
+                        <p><strong>Daily Rate:</strong> ₹${booking.daily_rate || 'N/A'}</p>
                     </div>
                     
                     <div class="detail-section">
@@ -837,9 +854,9 @@ function showBookingDetailsModal(booking) {
                     </div>
                     
                     <div class="detail-section">
-                        <p><strong>Subtotal:</strong> ₹${booking.subtotal || 'N/A'}</p>
+                        <p><strong>Subtotal:</strong>${booking.subtotal || 'N/A'}</p>
 <p><strong>Taxes:</strong> ₹${booking.taxes || 'N/A'}</p>
-<p><strong>Total Amount:</strong> ₹${booking.total_amount || 'N/A'}</p>
+<p><strong>Total Amount:</strong>₹${booking.total_amount || 'N/A'}</p>
 
                         <p><strong>Payment Status:</strong> ${booking.payment_status || 'N/A'}</p>
                         <p><strong>Payment Method:</strong> ${booking.payment_method || 'N/A'}</p>
@@ -1162,21 +1179,24 @@ document.addEventListener('DOMContentLoaded', function () {
     initAddCarForm();
     initCarSearch();
     initBookingFilters();
-    initBookingActions();
     initKeyboardNavigation();
-
-    // Load initial data
-    loadDashboardStats();
-
-    // Animate stats on dashboard
-    if (document.getElementById('dashboard').style.display !== 'none') {
-        setTimeout(animateStats, 500);
-    }
 
     // Add smooth transitions to all pages
     document.querySelectorAll('.page').forEach(page => {
         page.style.transition = 'opacity 0.3s ease-in-out';
     });
+
+    // Load initial data - Use setTimeout to ensure DOM is fully ready
+    setTimeout(() => {
+        console.log('Loading initial dashboard data...');
+        loadDashboardStats();
+
+        // Animate stats on dashboard
+        const dashboardElement = document.getElementById('dashboard');
+        if (dashboardElement && (dashboardElement.style.display !== 'none' || window.getComputedStyle(dashboardElement).display !== 'none')) {
+            setTimeout(animateStats, 500);
+        }
+    }, 200);
 
     console.log('Admin Dashboard initialized successfully!');
 });
