@@ -203,7 +203,7 @@ function renderAuthButtons() {
     desktopRoleBtn.className = "auth-nav-btn btn btn__primary";
     desktopRoleBtn.innerText = role === "admin" ? "Admin Dashboard" : "User Panel";
     desktopRoleBtn.onclick = () => {
-      window.location.href = role === "admin" ? "admin-dashboard-fixed.html" : "user.html";
+      window.location.href = role === "admin" ? "admin.html" : "user.html";
     };
 
     const desktopLogoutBtn = document.createElement("button");
