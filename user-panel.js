@@ -473,9 +473,252 @@ async function cancelBooking(bookingId) {
         showNotification('Error cancelling booking: ' + error.message, 'error');
     }
 }
-// Invoice stub
-function downloadInvoice(id) {
-    showNotification('Invoice downloaded successfully (demo).', 'success');
+
+// Download Invoice Function with jsPDF
+async function downloadInvoice(bookingId) {
+    const booking = userBookings.find(b => b.id === bookingId);
+    if (!booking) {
+        showNotification('Booking not found', 'error');
+        return;
+    }
+
+    try {
+        // Create new jsPDF instance
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Set font
+        doc.setFont("helvetica");
+
+        // Colors
+        const primaryColor = [37, 99, 235]; 
+        const darkColor = [44, 62, 80];
+        const lightGray = [149, 165, 166];
+
+        // Page dimensions
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 20;
+        let yPosition = margin;
+
+        // Helper function to format currency properly
+        function formatCurrency(amount) {
+            return 'Rs. ' + Number(amount).toLocaleString('en-IN');
+        }
+
+        // Header - Company Name
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, pageWidth, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.text('CAR RENTAL INVOICE', pageWidth / 2, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text('Premium Car Rental Services', pageWidth / 2, 30, { align: 'center' });
+
+        yPosition = 50;
+
+        // Invoice Details
+        doc.setTextColor(...darkColor);
+        doc.setFontSize(10);
+        doc.text('Invoice Date: ' + new Date().toLocaleDateString('en-IN'), margin, yPosition);
+        doc.text('Booking ID: ' + booking.id.substring(0, 13), pageWidth - margin, yPosition, { align: 'right' });
+
+        yPosition += 15;
+
+        // Customer Information Section
+        doc.setFontSize(14);
+        doc.setTextColor(...primaryColor);
+        doc.text('Customer Information', margin, yPosition);
+
+        yPosition += 8;
+        doc.setDrawColor(...lightGray);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+
+        yPosition += 10;
+        doc.setFontSize(10);
+        doc.setTextColor(...darkColor);
+
+        const customerName = currentUser.firstname + ' ' + currentUser.lastname || 'Customer';
+        doc.text('Name: ' + customerName, margin, yPosition);
+        yPosition += 7;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email) {
+            doc.text('Email: ' + user.email, margin, yPosition);
+            yPosition += 7;
+        }
+
+        if (currentUser.phone) {
+            doc.text('Phone: ' + currentUser.phone, margin, yPosition);
+            yPosition += 7;
+        }
+
+        yPosition += 8;
+
+        // Booking Details Section
+        doc.setFontSize(14);
+        doc.setTextColor(...primaryColor);
+        doc.text('Booking Details', margin, yPosition);
+
+        yPosition += 8;
+        doc.setDrawColor(...lightGray);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+
+        yPosition += 10;
+        doc.setFontSize(10);
+        doc.setTextColor(...darkColor);
+
+        // Vehicle Information
+        const carName = booking.cars?.name || 'Car';
+        const carType = booking.cars?.type || '';
+        doc.setFont("helvetica", "bold");
+        doc.text('Vehicle:', margin, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(carName + ' ' + carType, margin + 45, yPosition);
+        yPosition += 7;
+
+        // Status
+        doc.setFont("helvetica", "bold");
+        doc.text('Status:', margin, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(booking.booking_status || 'N/A', margin + 45, yPosition);
+        yPosition += 10;
+
+        // Pickup and Return Combined (same as correct invoice)
+        const pickupDate = formatDate(booking.pickup_date);
+        const pickupTime = formatTime(booking.pickup_time);
+        const returnDate = formatDate(booking.return_date);
+        const returnTime = formatTime(booking.return_time);
+
+        doc.setFont("helvetica", "bold");
+        doc.text('Pickup:', margin, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${pickupDate} at ${pickupTime}`, margin + 45, yPosition);
+        yPosition += 7;
+
+        doc.setFont("helvetica", "bold");
+        doc.text('Pickup Location:', margin, yPosition);
+        doc.setFont("helvetica", "normal");
+        const pickupLoc = booking.pickup_location || 'N/A';
+        const splitPickup = doc.splitTextToSize(pickupLoc, pageWidth - margin - 50);
+        doc.text(splitPickup, margin + 45, yPosition);
+        yPosition += (splitPickup.length * 7);
+
+        doc.setFont("helvetica", "bold");
+        doc.text('Return:', margin, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${returnDate} at ${returnTime}`, margin + 45, yPosition);
+        yPosition += 7;
+
+        doc.setFont("helvetica", "bold");
+        doc.text('Return Location:', margin, yPosition);
+        doc.setFont("helvetica", "normal");
+        const returnLoc = booking.return_location || 'N/A';
+        const splitReturn = doc.splitTextToSize(returnLoc, pageWidth - margin - 50);
+        doc.text(splitReturn, margin + 45, yPosition);
+        yPosition += (splitReturn.length * 7);
+
+        // Total Days
+        doc.setFont("helvetica", "bold");
+        doc.text('Total Days:', margin, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(String(booking.total_days || 0), margin + 45, yPosition);
+        yPosition += 10;
+
+        // Special Requests (if any)
+        if (booking.special_requests) {
+            doc.setFont("helvetica", "bold");
+            doc.text('Special Requests:', margin, yPosition);
+            doc.setFont("helvetica", "normal");
+            const splitText = doc.splitTextToSize(booking.special_requests, pageWidth - margin * 2 - 50);
+            doc.text(splitText, margin + 45, yPosition);
+            yPosition += (splitText.length * 7) + 5;
+        }
+
+        yPosition += 5;
+
+        // Payment Details Section
+        doc.setFontSize(14);
+        doc.setTextColor(...primaryColor);
+        doc.text('Payment Details', margin, yPosition);
+
+        yPosition += 8;
+        doc.setDrawColor(...lightGray);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+
+        yPosition += 10;
+        doc.setFontSize(10);
+        doc.setTextColor(...darkColor);
+
+        // Cost Breakdown
+        const dailyRate = Number(booking.daily_rate) || 0;
+        const subtotal = Number(booking.subtotal) || 0;
+        const taxes = Number(booking.taxes) || 0;
+        const securityDeposit = Number(booking.security_deposit) || 0;
+        const totalAmount = Number(booking.total_amount) || 0;
+
+        doc.setFont("helvetica", "normal");
+        doc.text('Daily Rate:', margin, yPosition);
+        doc.text(formatCurrency(dailyRate), pageWidth - margin, yPosition, { align: 'right' });
+        yPosition += 7;
+
+        doc.text('Subtotal (' + booking.total_days + ' days):', margin, yPosition);
+        doc.text(formatCurrency(subtotal), pageWidth - margin, yPosition, { align: 'right' });
+        yPosition += 7;
+
+        doc.text('Taxes & Fees:', margin, yPosition);
+        doc.text(formatCurrency(taxes), pageWidth - margin, yPosition, { align: 'right' });
+        yPosition += 7;
+
+        doc.text('Security Deposit:', margin, yPosition);
+        doc.text(formatCurrency(securityDeposit), pageWidth - margin, yPosition, { align: 'right' });
+        yPosition += 10;
+
+        // ✅ FIXED SECTION (same as correct invoice layout)
+        doc.setDrawColor(...darkColor);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += 10;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text('Total Amount:', margin, yPosition);
+        doc.text(formatCurrency(totalAmount), pageWidth - margin, yPosition, { align: 'right' });
+        yPosition += 12;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text('Payment Status:', margin, yPosition);
+        doc.setFont("helvetica", "bold");
+        doc.text(booking.payment_status || 'N/A', margin + 45, yPosition);
+        yPosition += 7;
+
+        doc.setFont("helvetica", "normal");
+        doc.text('Payment Method:', margin, yPosition);
+        doc.setFont("helvetica", "bold");
+        doc.text(booking.payment_method || 'N/A', margin + 45, yPosition);
+        yPosition += 15;
+
+        // Footer (fixed position below Payment Method)
+const footerY = pageHeight - 25; // moved lower for spacing
+doc.setDrawColor(...lightGray);
+doc.line(margin, footerY, pageWidth - margin, footerY);
+
+doc.setFontSize(9);
+doc.setFont("helvetica", "normal");
+doc.setTextColor(...lightGray);
+doc.text('Thank you for choosing our car rental service!', pageWidth / 2, footerY + 10, { align: 'center' });
+doc.text('For support, contact us at support@carrental.com', pageWidth / 2, footerY + 17, { align: 'center' });
+
+        // Save PDF
+        const fileName = 'Invoice_' + booking.id.substring(0, 8) + '_' + new Date().getTime() + '.pdf';
+        doc.save(fileName);
+
+        showNotification('Invoice downloaded successfully!', 'success');
+
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        showNotification('Error generating invoice. Please try again.', 'error');
+    }
 }
 
 // Utilities
@@ -530,14 +773,7 @@ function attachEventListeners() {
 
 
 // New: Download invoice button (stub or real implementation)
-function downloadInvoice(bookingId) {
-  const booking = userBookings.find(b => b.id === bookingId);
-  if (!booking) return showNotification('Booking not found.', 'error');
 
-  // You can later integrate PDF generation here.
-  // For now, just simulate.
-  showNotification('Invoice downloaded successfully (demo).', 'success');
-}
 // ...existing code...
 
 // Replace the showBookingModal function with this version:
