@@ -188,7 +188,7 @@ function renderAuthButtons() {
     mobileRoleBtn.className = "auth-nav-btn nav__links__btn";
     mobileRoleBtn.innerHTML =
       role === "admin"
-        ? `<a href="admin-dashboard-fixed.html">Admin Dashboard</a>`
+        ? `<a href="admin.html">Admin Dashboard</a>`
         : `<a href="user.html">User Panel</a>`;
 
     const mobileLogoutBtn = document.createElement("li");
