@@ -143,7 +143,7 @@ function populateUserBookings() {
             <div class="no-bookings" style="text-align: center; padding: 2rem; background: white; border-radius: 12px;">
                 <h3 style="color: #6b7280; margin-bottom: 1rem;">No Bookings Found</h3>
                 <p style="color: #9ca3af;">You haven't made any bookings yet.</p>
-                <a href="explore.html" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">
+                <a href="Explore_cars.html" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">
                     Browse Cars
                 </a>
             </div>
