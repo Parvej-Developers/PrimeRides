@@ -511,7 +511,7 @@ async function downloadInvoice(bookingId) {
         doc.rect(0, 0, pageWidth, 40, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(24);
-        doc.text('CAR RENTAL INVOICE', pageWidth / 2, 20, { align: 'center' });
+        doc.text('PrimeRides', pageWidth / 2, 20, { align: 'center' });
         doc.setFontSize(12);
         doc.text('Premium Car Rental Services', pageWidth / 2, 30, { align: 'center' });
 
