@@ -710,6 +710,7 @@ function initCarSearch() {
 }
 
 // Load bookings from Supabase with car and user details
+// Load bookings from Supabase with car and user details
 async function loadBookings() {
     console.log('Loading bookings from Supabase...');
     const bookingsContainer = document.querySelector('.booking-table');
@@ -719,13 +720,11 @@ async function loadBookings() {
         return;
     }
 
-    // Find the table body (skip header row)
+    // Find or create the table body
     let bookingsBody = bookingsContainer.querySelector('.bookings-body');
     if (!bookingsBody) {
-        // Create bookings body if it doesn't exist
         bookingsBody = document.createElement('div');
         bookingsBody.className = 'bookings-body';
-        // Keep the header row and append body after it
         const headerRow = bookingsContainer.querySelector('.booking-row.header');
         if (headerRow) {
             headerRow.parentNode.insertBefore(bookingsBody, headerRow.nextSibling);
@@ -743,7 +742,8 @@ async function loadBookings() {
     `;
 
     try {
-        // Fetch bookings with car and user details using joins
+        // FIXED: Removed "!bookings_user_id_fkey" and just used "users"
+        // This allows Supabase to automatically find the connection based on your schema
         const { data: bookings, error } = await window.supabaseClient
             .from('bookings')
             .select(`
@@ -754,10 +754,11 @@ async function loadBookings() {
                     type,
                     image_url
                 ),
-                users!bookings_user_id_fkey (
+                users (
                     id,
                     firstname,
-                    lastname
+                    lastname,
+                    phone
                 )
             `)
             .order('created_at', { ascending: false });
@@ -773,41 +774,47 @@ async function loadBookings() {
             return;
         }
 
-        // Render bookings
+        // Debug: Check if user data is actually coming back
+        console.log('First booking user data:', bookings[0]?.users);
+
         renderBookings(bookings);
-        console.log(`Loaded ${bookings.length} bookings successfully`);
 
     } catch (error) {
         console.error('Unexpected error loading bookings:', error);
         showBookingsError('Failed to load bookings. Please check your connection.');
     }
-}
-
-// Render bookings in the table
-function renderBookings(bookings) {
+    }
+    function renderBookings(bookings) {
     const bookingsBody = document.querySelector('.bookings-body');
     
     bookingsBody.innerHTML = bookings.map(booking => {
-        // Handle user data with fallback and debugging
-   let customerName = 'Unknown Customer';
-    if (Array.isArray(booking.users) && booking.users.length > 0) {
-        customerName = `${booking.users[0].firstname || ''} ${booking.users[0].lastname || ''}`.trim() || 'Unknown Customer';
-    } else if (booking.users && typeof booking.users === 'object') {
-        customerName = `${booking.users.firstname || ''} ${booking.users.lastname || ''}`.trim() || 'Unknown Customer';
-    }
+        // IMPROVED: Handle User Name Retrieval
+        let customerName = 'Unknown Customer';
+        let userData = booking.users;
+
+        // Sometimes Supabase returns an array for joins, sometimes an object
+        if (Array.isArray(userData)) {
+            userData = userData.length > 0 ? userData[0] : null;
+        }
+
+        if (userData) {
+            customerName = `${userData.firstname || ''} ${userData.lastname || ''}`.trim();
+        } 
+        
+        // Fallback if name is empty string
+        if (!customerName) customerName = 'Unknown Customer';
+
+        // Car Details
         const carName = booking.cars?.name || 'Unknown Car';
         const carType = booking.cars?.type || '';
         
-        // Format dates
+        // Format dates & Calculate days
         const startDate = new Date(booking.pickup_date).toLocaleDateString();
         const endDate = new Date(booking.return_date).toLocaleDateString();
-        
-        // Calculate total days
         const pickupDate = new Date(booking.pickup_date);
         const returnDate = new Date(booking.return_date);
-const totalDays = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
+        const totalDays = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24)) || 1;
         
-        // Get status display
         const statusInfo = getStatusInfo(booking.booking_status);
         
         return `
@@ -827,7 +834,7 @@ const totalDays = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
                     ${totalDays} day${totalDays !== 1 ? 's' : ''}
                 </div>
                 <div class="booking-amount">
-                    ₹${booking.total_amount ? booking.total_amount.toLocaleString() : 'N/A'}
+                    ₹${booking.total_amount ? Number(booking.total_amount).toLocaleString() : 'N/A'}
                 </div>
                 <div class="booking-status">
                     <span class="status-badge ${booking.booking_status}">
@@ -853,7 +860,6 @@ const totalDays = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
         `;
     }).join('');
 }
-
 // Get status display info
 function getStatusInfo(status) {
     const statusMap = {
