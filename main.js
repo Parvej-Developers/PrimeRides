@@ -38,10 +38,7 @@ const signupFormTemplate = `
   </div>
 `;
 
-/**
- * Render authentication form content into the modal.
- * @param {"signin"|"signup"} type
- */
+
 function setAuthForm(type) {
   if (!modal) return;
   modal.innerHTML = type === "signin" ? signinFormTemplate : signupFormTemplate;
