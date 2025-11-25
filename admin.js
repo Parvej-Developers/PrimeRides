@@ -469,6 +469,9 @@ function initAddCarForm() {
 }
 
 // Load Dashboard Stats
+// ==========================================
+// REPLACED: Main Dashboard Stats Loader
+// ==========================================
 async function loadDashboardStats() {
     console.log('Loading dashboard stats from Supabase...');
 
@@ -476,79 +479,210 @@ async function loadDashboardStats() {
     await new Promise(resolve => setTimeout(resolve, 150));
 
     try {
-        // Fetch cars data
+        // 1. Load Basic Counters (Existing Functionality)
         const { data: cars, error: carsError } = await window.supabaseClient
             .from('cars')
             .select('status');
 
-        if (carsError) {
-            console.error('Error loading cars stats:', carsError);
-            return;
-        }
-
-        // Fetch bookings data
         const { data: bookings, error: bookingsError } = await window.supabaseClient
             .from('bookings')
             .select('id');
 
-        if (bookingsError) {
-            console.error('Error loading bookings stats:', bookingsError);
-            return;
+        if (!carsError && !bookingsError) {
+            const totalCars = cars?.length || 0;
+            const availableCars = cars?.filter(car => car.status !== 'unavailable').length || 0;
+            const unavailableCars = totalCars - availableCars;
+            const totalBookings = bookings?.length || 0;
+
+            updateElement('totalCarsCount', totalCars);
+            updateElement('availableCarsCount', availableCars);
+            updateElement('unavailableCarsCount', unavailableCars);
+            updateElement('totalBookingsCount', totalBookings);
+            
+            // Update text labels
+            updateElement('totalCarsChange', `${totalCars} total cars`);
+            updateElement('availableCarsChange', `${availableCars} ready to rent`);
+            updateElement('unavailableCarsChange', `${unavailableCars} need attention`);
+            updateElement('totalBookingsChange', `${totalBookings} total bookings`);
         }
 
-        // Calculate car stats
-        const totalCars = cars?.length || 0;
-        const availableCars = cars?.filter(car => car.status !== 'unavailable').length || 0;
-        const unavailableCars = totalCars - availableCars;
-
-        // Calculate booking stats
-        const totalBookings = bookings?.length || 0;
-
-        // Helper function to safely update elements with retry
-        const updateElement = (id, value, retries = 3) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
-                // Remove any loading classes
-                element.classList.remove('loading');
-                return true;
-            } else if (retries > 0) {
-                console.warn(`Element ${id} not found, retrying... (${retries} attempts left)`);
-                return false;
-            } else {
-                console.warn(`Element ${id} not found in DOM after retries`);
-                return false;
-            }
-        };
-
-        // Update dashboard stats - Cars
-        updateElement('totalCarsCount', totalCars);
-        updateElement('availableCarsCount', availableCars);
-        updateElement('unavailableCarsCount', unavailableCars);
-
-        // Update dashboard stats - Bookings
-        updateElement('totalBookingsCount', totalBookings);
-
-        // Update change indicators - Cars
-        updateElement('totalCarsChange', `${totalCars} total cars`);
-        updateElement('availableCarsChange', `${availableCars} ready to rent`);
-        updateElement('unavailableCarsChange', `${unavailableCars} need attention`);
-
-        // Update change indicators - Bookings
-        updateElement('totalBookingsChange', `${totalBookings} total bookings`);
-
-        console.log('✅ Dashboard stats loaded successfully:', {
-            totalCars,
-            availableCars,
-            unavailableCars,
-            totalBookings
-        });
+        // 2. Load New Dynamic Sections
+        await loadRecentBookingsWidget();
+        await loadRevenueStats();
 
     } catch (error) {
         console.error('❌ Error loading dashboard stats:', error);
     }
 }
 
+// Helper to safely update text
+const updateElement = (id, value) => {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = value;
+        element.classList.remove('loading');
+    }
+};
+
+// ==========================================
+// NEW: Load Recent Bookings (Top 4)
+// ==========================================
+// ==========================================
+// UPDATED: Recent Bookings + "View All" Link
+// ==========================================
+async function loadRecentBookingsWidget() {
+    const container = document.querySelector('.recent-bookings');
+    if (!container) return;
+
+    // --- NEW: Activate "View All" Link ---
+    // Finds the "View All" button inside the same card
+    const viewAllBtn = container.closest('.dashboard-card')?.querySelector('.view-all');
+    if (viewAllBtn) {
+        // Redirects to 'booking' page (Manage Bookings) to see the full list
+        // Note: If you specifically wanted the 'Manage Cars' page, change 'booking' to 'managecar' below
+        viewAllBtn.onclick = (e) => showPage('booking', e);
+    }
+    // -------------------------------------
+
+    try {
+        // Fetch top 4 most recent bookings
+        const { data: bookings, error } = await window.supabaseClient
+            .from('bookings')
+            .select(`
+                id, created_at, total_amount, booking_status, pickup_date,
+                cars ( name, image_url )
+            `)
+            .order('created_at', { ascending: false })
+            .limit(4);
+
+        if (error) throw error;
+
+        if (!bookings || bookings.length === 0) {
+            container.innerHTML = '<p style="padding:1rem; color:#666;">No recent bookings found.</p>';
+            return;
+        }
+
+        // Map status to CSS classes
+        const getStatusClass = (status) => {
+            if (['confirmed', 'pickup_successful'].includes(status)) return 'confirmed';
+            if (['complete', 'return_successful'].includes(status)) return 'completed';
+            if (status === 'cancelled') return 'cancelled';
+            return 'pending';
+        };
+
+        const html = bookings.map(b => {
+            const carName = b.cars?.name || 'Unknown Car';
+            const carImageDisplay = b.cars?.image_url 
+                ? `<img src="${b.cars.image_url}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`
+                : `<i class="fas fa-car"></i>`;
+                
+            const dateStr = new Date(b.pickup_date).toLocaleDateString();
+            const statusClass = getStatusClass(b.booking_status);
+            const statusText = b.booking_status.charAt(0).toUpperCase() + b.booking_status.slice(1).replace('_', ' ');
+
+            return `
+            <div class="booking-item">
+                <div class="booking-car">
+                  <div class="car-thumb">
+                    ${carImageDisplay}
+                  </div>
+                  <div class="car-info">
+                    <strong>${carName}</strong>
+                    <small>${dateStr} • ₹${b.total_amount || 0}</small>
+                  </div>
+                </div>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+              </div>
+            `;
+        }).join('');
+
+        container.innerHTML = html;
+
+    } catch (err) {
+        console.error('Error loading recent bookings widget:', err);
+        container.innerHTML = '<p style="color:red; padding:1rem;">Failed to load.</p>';
+    }
+}
+
+// ==========================================
+// UPDATED: Monthly Revenue + Last Month Display
+// ==========================================
+async function loadRevenueStats() {
+    try {
+        const now = new Date();
+        const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+        
+        // 1. Fetch Current Month Revenue (excluding cancelled)
+        const { data: currentMonthData, error: currError } = await window.supabaseClient
+            .from('bookings')
+            .select('total_amount')
+            .gte('created_at', startOfCurrentMonth)
+            .neq('booking_status', 'cancelled');
+
+        // 2. Fetch Last Month Revenue (for comparison)
+        const { data: lastMonthData, error: lastError } = await window.supabaseClient
+            .from('bookings')
+            .select('total_amount')
+            .gte('created_at', startOfLastMonth)
+            .lt('created_at', startOfCurrentMonth)
+            .neq('booking_status', 'cancelled');
+
+        if (currError || lastError) throw (currError || lastError);
+
+        // --- Calculations ---
+        const sumAmounts = (items) => items.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
+
+        const currentRevenue = sumAmounts(currentMonthData || []);
+        const lastRevenue = sumAmounts(lastMonthData || []);
+
+        // Calculate Percentage Change
+        let percentChange = 0;
+        if (lastRevenue > 0) {
+            percentChange = ((currentRevenue - lastRevenue) / lastRevenue) * 100;
+        } else if (currentRevenue > 0) {
+            percentChange = 100; 
+        }
+
+        // --- Update UI ---
+
+        // 1. Total Revenue Display (Current Month)
+        const revenueAmountEl = document.querySelector('.revenue-amount');
+        if (revenueAmountEl) revenueAmountEl.textContent = `₹${currentRevenue.toLocaleString()}`;
+
+        // 2. Percentage Change Display
+        const changeEl = document.querySelector('.revenue-change');
+        if (changeEl) {
+            const isPositive = percentChange >= 0;
+            const icon = isPositive ? 'fa-trending-up' : 'fa-trending-down';
+            const colorClass = isPositive ? 'positive' : 'negative';
+            
+            changeEl.className = `revenue-change ${colorClass}`;
+            changeEl.innerHTML = `
+                <i class="fas ${icon}"></i>
+                ${isPositive ? '+' : ''}${percentChange.toFixed(1)}% from last month
+            `;
+        }
+
+        // 3. SHOW LAST MONTH REVENUE (At the bottom)
+        const breakdownContainer = document.querySelector('.revenue-breakdown');
+        if (breakdownContainer) {
+            // Ensure it is visible
+            breakdownContainer.style.display = 'flex'; 
+            
+            // Inject Last Month Data
+            breakdownContainer.innerHTML = `
+              <div class="breakdown-item" style="width: 100%;">
+                <span class="breakdown-label">Last Month Total</span>
+                <span class="breakdown-value">₹${lastRevenue.toLocaleString()}</span>
+              </div>
+            `;
+        }
+
+    } catch (err) {
+        console.error('Error calculating revenue:', err);
+    }
+}
 // Search Cars
 function initCarSearch() {
     const searchInput = document.getElementById('carSearchInput');
