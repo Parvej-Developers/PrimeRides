@@ -1,5 +1,3 @@
-// Enhanced Admin Dashboard JavaScript with Dynamic Supabase Integration
-
 // Page Management
 function showPage(pageId, event) {
     if (event) {
