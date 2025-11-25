@@ -382,44 +382,7 @@ function viewBookingDetails(bookingId) {
     showBookingModal(booking);
 }
 
-function showBookingModal(booking) {
-    const modalHTML = `
-        <div class="modal" id="bookingModal" style="display: flex;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Booking Details</h3>
-                    <button class="close-modal" onclick="closeBookingModal()">×</button>
-                </div>
-                <div class="modal-body">
-                    <div class="booking-details-full">
-                        <h4>${booking.cars?.name || 'Car'} ${booking.cars?.type || ''}</h4>
-                        <div class="detail-grid">
-                            <div><strong>Booking ID:</strong> ${booking.id}</div>
-                            <div><strong>Status:</strong> ${booking.booking_status}</div>
-                            <div><strong>Pickup Date:</strong> ${formatDate(booking.pickup_date)}</div>
-                            <div><strong>Return Date:</strong> ${formatDate(booking.return_date)}</div>
-                            <div><strong>Pickup Time:</strong> ${formatTime(booking.pickup_time)}</div>
-                            <div><strong>Return Time:</strong> ${formatTime(booking.return_time)}</div>
-                            <div><strong>Pickup Location:</strong> ${booking.pickup_location}</div>
-                            <div><strong>Return Location:</strong> ${booking.return_location}</div>
-                            <div><strong>Total Days:</strong> ${booking.total_days}</div>
-                            <div><strong>Daily Rate:</strong> ₹${booking.daily_rate?.toLocaleString()}</div>
-                            <div><strong>Subtotal:</strong> ₹${booking.subtotal?.toLocaleString()}</div>
-                            <div><strong>Taxes:</strong> ₹${booking.taxes?.toLocaleString()}</div>
-                            <div><strong>Security Deposit:</strong> ₹${booking.security_deposit?.toLocaleString()}</div>
-                            <div><strong>Total Amount:</strong> ₹${booking.total_amount?.toLocaleString()}</div>
-                            <div><strong>Payment Status:</strong> ${booking.payment_status}</div>
-                            <div><strong>Payment Method:</strong> ${booking.payment_method}</div>
-                            ${booking.special_requests ? `<div><strong>Special Requests:</strong> ${booking.special_requests}</div>` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
 
 function closeBookingModal() {
     const modal = document.getElementById('bookingModal');
@@ -772,11 +735,7 @@ function attachEventListeners() {
 }
 
 
-// New: Download invoice button (stub or real implementation)
 
-// ...existing code...
-
-// Replace the showBookingModal function with this version:
 function showBookingModal(booking) {
   const modalHTML = `
     <div class="modal-overlay" id="bookingModal">
