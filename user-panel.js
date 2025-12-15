@@ -162,7 +162,7 @@ function createBookingCard(booking) {
     const statusText = booking.booking_status || 'pending';
     
     return `
-        <div class="booking-card" data-status="${statusText.toLowerCase()}">
+<div class="booking-card" data-status="${normalizeStatus(booking.booking_status)}">
             <div class="booking-image">
                 ${car.image_url ? 
                     `<img src="${car.image_url}" alt="${car.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
@@ -237,6 +237,24 @@ function getStatusClass(s) {
   };
   return map[k] || 'pending';
 }
+// ===============================
+// NORMALIZE BOOKING STATUS (ADMIN MATCH)
+// ===============================
+function normalizeStatus(status) {
+    if (!status) return 'pending';
+
+    const s = status.toLowerCase();
+
+    if (s === 'pending') return 'pending';
+    if (s === 'confirmed') return 'confirmed';
+    if (s === 'pickup_done' || s === 'pickup_successful') return 'pickup_done';
+    if (s === 'return_done' || s === 'return_successful') return 'return_done';
+    if (s === 'completed' || s === 'complete') return 'completed';
+    if (s === 'cancelled' || s === 'canceled') return 'cancelled';
+
+    return 'pending';
+}
+
 // Can cancel?
 function canCancelBooking(b) {
     const s = b.booking_status?.toLowerCase();
@@ -304,20 +322,29 @@ function initializeFilters() {
         });
     });
 }
-function filterBookings(f) {
+function filterBookings(filter) {
     document.querySelectorAll('.booking-card').forEach(card => {
-        card.style.display = (f === 'all' || card.dataset.status === f) ? 'block' : 'none';
+        const status = card.dataset.status;
+        if (filter === 'all' || status === filter) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
     });
 }
 
+
 // Form init & update
-function initializeForm() {
-    const form = document.getElementById('updateProfileForm');
-    if (form) form.addEventListener('submit', e => {
-        e.preventDefault();
-        updateProfile();
+function initializeFilters() {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterBookings(btn.dataset.filter);
+        });
     });
 }
+
 async function updateProfile() {
     const btn = document.querySelector('button[type="submit"]');
     const original = btn.innerHTML;

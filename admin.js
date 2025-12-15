@@ -1527,3 +1527,161 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ===============================
+// PRICE FORMAT HELPER (FIX NaN)
+// ===============================
+function formatPrice(value) {
+    if (!value) return '0';
+    return Number(
+        String(value).replace(/[^0-9]/g, '')
+    ).toLocaleString();
+}
+// ===============================
+// EXPORT DASHBOARD AS PDF (FINAL)
+// ===============================
+async function exportDashboardPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    /* =====================
+       COLORS (Tailwind Blue-600)
+       #2563eb → rgb(37, 99, 235)
+    ===================== */
+    const PRIMARY = [37, 99, 235];
+    const DARK = [30, 30, 30];
+
+    /* =====================
+       FETCH LIVE DATA
+    ===================== */
+    const { data: cars } = await window.supabaseClient
+        .from('cars')
+        .select('*');
+
+    const { data: bookings } = await window.supabaseClient
+        .from('bookings')
+        .select('total_amount, created_at')
+        .neq('booking_status', 'cancelled');
+
+    /* =====================
+       CALCULATIONS
+    ===================== */
+    const totalCars = cars.length;
+    const availableCars = cars.filter(c => c.status !== 'unavailable').length;
+    const unavailableCars = totalCars - availableCars;
+    const totalBookings = bookings.length;
+
+    const currentMonth = new Date().getMonth();
+    const monthlyRevenue = bookings
+        .filter(b => new Date(b.created_at).getMonth() === currentMonth)
+        .reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
+
+    /* =====================
+       HEADER BAR
+    ===================== */
+    doc.setFillColor(...PRIMARY);
+    doc.rect(0, 0, 210, 22, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.text('ADMIN DASHBOARD REPORT', 14, 14);
+
+    doc.setFontSize(9);
+    // doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 150, 14);
+const generatedAt = new Date().toLocaleString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+});
+
+doc.text(`Generated on: ${generatedAt}`, 120, 14);
+
+    /* =====================
+       DASHBOARD SUMMARY
+    ===================== */
+    let y = 38;
+    doc.setTextColor(...DARK);
+    doc.setFontSize(14);
+    doc.text('Dashboard Summary', 14, y);
+
+    doc.setFontSize(11);
+    y += 10;
+    doc.text(`Total Cars: ${totalCars}`, 14, y);
+    doc.text(`Available Cars: ${availableCars}`, 80, y);
+
+    y += 8;
+    doc.text(`Unavailable Cars: ${unavailableCars}`, 14, y);
+    doc.text(`Total Bookings: ${totalBookings}`, 80, y);
+
+    /* =====================
+       MONTHLY REVENUE BOX
+    ===================== */
+    y += 18;
+    doc.setFillColor(241, 245, 249);
+    doc.rect(14, y - 8, 180, 18, 'F');
+
+    doc.setFontSize(13);
+    doc.text('Monthly Revenue', 16, y);
+
+    doc.setFontSize(12);
+    doc.text(`Rs. ${monthlyRevenue.toLocaleString()}`, 150, y);
+
+    /* =====================
+       CARS TABLE
+    ===================== */
+    y += 16;
+
+  const tableData = cars.map(car => [
+    car.name || '-',
+    car.type || '-',
+    car.fuel || '-',
+    car.transmission || '-',
+    `Rs. ${formatPrice(car.price)}`,   // 👈 ONLY PRICE
+    car.status === 'unavailable' ? 'Unavailable' : 'Available'
+]);
+
+    doc.autoTable({
+        startY: y,
+        head: [['Name', 'Type', 'Fuel', 'Transmission', 'Price / Day', 'Status']],
+        body: tableData,
+        theme: 'grid',
+        styles: {
+            fontSize: 10,
+            cellPadding: 4,
+            textColor: DARK
+        },
+        headStyles: {
+            fillColor: PRIMARY,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold'
+        },
+        columnStyles: {
+            4: { halign: 'right' },
+            5: { halign: 'center' }
+        },
+        didParseCell: function (data) {
+            if (data.section === 'body' && data.column.index === 5) {
+                if (data.cell.text[0] === 'Available') {
+                    data.cell.styles.textColor = [22, 163, 74]; // green
+                } else {
+                    data.cell.styles.textColor = [220, 38, 38]; // red
+                }
+            }
+        }
+    });
+
+    /* =====================
+       SAVE FILE
+    ===================== */
+    const d = new Date();
+    doc.save(`dashboard_report_${d.getFullYear()}_${d.getMonth() + 1}.pdf`);
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const exportBtn = document.getElementById('exportPdfBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportDashboardPDF);
+    }
+});
