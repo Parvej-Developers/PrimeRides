@@ -411,59 +411,69 @@ async function addCar(carData) {
 function initAddCarForm() {
     const addCarForm = document.getElementById('addCarForm');
     if (addCarForm) {
-        addCarForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
+       addCarForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-            // Get form data
-            const formData = new FormData(addCarForm);
-            const carData = {
-                name: document.getElementById('carName').value.trim(),
-                type: document.getElementById('carType').value.trim(),
-                price: document.getElementById('carPrice').value.trim(),
-                seats: document.getElementById('carSeats').value.trim(),
-                fuel: document.getElementById('carFuel').value.trim(),
-                transmission: document.getElementById('carTransmission').value.trim(),
-                location: document.getElementById('carLocation').value.trim(),
-                image_url: document.getElementById('carImageUrl').value.trim()
-            };
+    const imageFile = document.getElementById('carImage').files[0];
 
-            // Basic validation
-            const requiredFields = ['name', 'type', 'price', 'seats', 'fuel', 'transmission', 'location', 'image_url'];
-            const missingFields = requiredFields.filter(field => !carData[field]);
-
-            if (missingFields.length > 0) {
-                showNotification('Please fill in all required fields', 'error');
-                return;
-            }
-
-            // Show loading state
-            const submitBtn = addCarForm.querySelector('.btn-primary');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Adding Car...';
-            submitBtn.disabled = true;
-
-            // Add car
-            const success = await addCar(carData);
-
-            if (success) {
-                // Reset form
-                addCarForm.reset();
-                const fileMessage = document.getElementById('fileMessage');
-                if (fileMessage) {
-                    fileMessage.textContent = '';
-                }
-
-                // Navigate to manage cars
-                setTimeout(() => {
-                    showPage('managecar');
-                }, 1000);
-            }
-
-            // Reset submit button
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-        });
+    if (!imageFile) {
+        showNotification('Please select car image', 'error');
+        return;
     }
+
+    // 1️⃣ Upload image to Supabase Storage
+    const imageUrl = await uploadCarImage(imageFile);
+
+    if (!imageUrl) {
+        showNotification('Image upload failed', 'error');
+        return;
+    }
+
+    // 2️⃣ Prepare car data
+    const carData = {
+        name: document.getElementById('carName').value.trim(),
+        type: document.getElementById('carType').value.trim(),
+        price: document.getElementById('carPrice').value.trim(),
+        seats: document.getElementById('carSeats').value.trim(),
+        fuel: document.getElementById('carFuel').value.trim(),
+        transmission: document.getElementById('carTransmission').value.trim(),
+        location: document.getElementById('carLocation').value.trim(),
+        image_url: imageUrl // ✅ AUTO from storage
+    };
+
+    // 3️⃣ Insert into DB
+    const success = await addCar(carData);
+
+    if (success) {
+        addCarForm.reset();
+        setTimeout(() => {
+            showPage('managecar');
+        }, 500);
+    }
+});
+
+    }
+}
+async function uploadCarImage(file) {
+    const ext = file.name.split('.').pop();
+    const fileName = `cars/${Date.now()}.${ext}`;
+
+    const { error } = await window.supabaseClient
+        .storage
+        .from('Images')
+        .upload(fileName, file);
+
+    if (error) {
+        console.error('Image upload error:', error);
+        return null;
+    }
+
+    const { data } = window.supabaseClient
+        .storage
+        .from('Images')
+        .getPublicUrl(fileName);
+
+    return data.publicUrl;
 }
 
 // Load Dashboard Stats
@@ -496,7 +506,7 @@ async function loadDashboardStats() {
             updateElement('availableCarsCount', availableCars);
             updateElement('unavailableCarsCount', unavailableCars);
             updateElement('totalBookingsCount', totalBookings);
-            
+
             // Update text labels
             updateElement('totalCarsChange', `${totalCars} total cars`);
             updateElement('availableCarsChange', `${availableCars} ready to rent`);
@@ -570,10 +580,10 @@ async function loadRecentBookingsWidget() {
 
         const html = bookings.map(b => {
             const carName = b.cars?.name || 'Unknown Car';
-            const carImageDisplay = b.cars?.image_url 
+            const carImageDisplay = b.cars?.image_url
                 ? `<img src="${b.cars.image_url}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`
                 : `<i class="fas fa-car"></i>`;
-                
+
             const dateStr = new Date(b.pickup_date).toLocaleDateString();
             const statusClass = getStatusClass(b.booking_status);
             const statusText = b.booking_status.charAt(0).toUpperCase() + b.booking_status.slice(1).replace('_', ' ');
@@ -610,7 +620,7 @@ async function loadRevenueStats() {
         const now = new Date();
         const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-        
+
         // 1. Fetch Current Month Revenue (excluding cancelled)
         const { data: currentMonthData, error: currError } = await window.supabaseClient
             .from('bookings')
@@ -639,7 +649,7 @@ async function loadRevenueStats() {
         if (lastRevenue > 0) {
             percentChange = ((currentRevenue - lastRevenue) / lastRevenue) * 100;
         } else if (currentRevenue > 0) {
-            percentChange = 100; 
+            percentChange = 100;
         }
 
         // --- Update UI ---
@@ -654,7 +664,7 @@ async function loadRevenueStats() {
             const isPositive = percentChange >= 0;
             const icon = isPositive ? 'fa-trending-up' : 'fa-trending-down';
             const colorClass = isPositive ? 'positive' : 'negative';
-            
+
             changeEl.className = `revenue-change ${colorClass}`;
             changeEl.innerHTML = `
                 <i class="fas ${icon}"></i>
@@ -666,8 +676,8 @@ async function loadRevenueStats() {
         const breakdownContainer = document.querySelector('.revenue-breakdown');
         if (breakdownContainer) {
             // Ensure it is visible
-            breakdownContainer.style.display = 'flex'; 
-            
+            breakdownContainer.style.display = 'flex';
+
             // Inject Last Month Data
             breakdownContainer.innerHTML = `
               <div class="breakdown-item" style="width: 100%;">
@@ -708,11 +718,10 @@ function initCarSearch() {
 }
 
 // Load bookings from Supabase with car and user details
-// Load bookings from Supabase with car and user details
 async function loadBookings() {
     console.log('Loading bookings from Supabase...');
     const bookingsContainer = document.querySelector('.booking-table');
-    
+
     if (!bookingsContainer) {
         console.error('Bookings container not found');
         return;
@@ -740,7 +749,6 @@ async function loadBookings() {
     `;
 
     try {
-        // FIXED: Removed "!bookings_user_id_fkey" and just used "users"
         // This allows Supabase to automatically find the connection based on your schema
         const { data: bookings, error } = await window.supabaseClient
             .from('bookings')
@@ -781,10 +789,10 @@ async function loadBookings() {
         console.error('Unexpected error loading bookings:', error);
         showBookingsError('Failed to load bookings. Please check your connection.');
     }
-    }
-    function renderBookings(bookings) {
+}
+function renderBookings(bookings) {
     const bookingsBody = document.querySelector('.bookings-body');
-    
+
     bookingsBody.innerHTML = bookings.map(booking => {
         // IMPROVED: Handle User Name Retrieval
         let customerName = 'Unknown Customer';
@@ -797,24 +805,24 @@ async function loadBookings() {
 
         if (userData) {
             customerName = `${userData.firstname || ''} ${userData.lastname || ''}`.trim();
-        } 
-        
+        }
+
         // Fallback if name is empty string
         if (!customerName) customerName = 'Unknown Customer';
 
         // Car Details
         const carName = booking.cars?.name || 'Unknown Car';
         const carType = booking.cars?.type || '';
-        
+
         // Format dates & Calculate days
         const startDate = new Date(booking.pickup_date).toLocaleDateString();
         const endDate = new Date(booking.return_date).toLocaleDateString();
         const pickupDate = new Date(booking.pickup_date);
         const returnDate = new Date(booking.return_date);
         const totalDays = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24)) || 1;
-        
+
         const statusInfo = getStatusInfo(booking.booking_status);
-        
+
         return `
             <div class="booking-row" data-booking-id="${booking.id}">
                 <div class="booking-info">
@@ -868,20 +876,20 @@ function getStatusInfo(status) {
         'complete': { display: 'Complete', class: 'completed' },
         'cancelled': { display: 'Cancelled', class: 'cancelled' }
     };
-    
+
     return statusMap[status] || { display: status, class: 'unknown' };
 }
 
 // Update booking status
 async function updateBookingStatus(bookingId, newStatus) {
     if (!newStatus) return;
-    
+
     try {
         console.log(`Updating booking ${bookingId} to status: ${newStatus}`);
-        
+
         const { data, error } = await supabase
             .from('bookings')
-            .update({ 
+            .update({
                 booking_status: newStatus,
                 updated_at: new Date().toISOString()
             })
@@ -895,13 +903,13 @@ async function updateBookingStatus(bookingId, newStatus) {
         }
 
         console.log('Booking status updated successfully:', data);
-        
+
         // Refresh bookings to show updated status
         await loadBookings();
-        
+
         // Show success message
         showSuccessMessage(`Booking status updated to "${getStatusInfo(newStatus).display}" successfully!`);
-        
+
     } catch (error) {
         console.error('Unexpected error updating booking:', error);
         alert('Failed to update booking status. Please check your connection.');
@@ -940,7 +948,7 @@ async function viewBookingDetails(bookingId) {
         }
 
         showBookingDetailsModal(booking);
-        
+
     } catch (error) {
         console.error('Unexpected error:', error);
         alert('Failed to load booking details.');
@@ -949,13 +957,13 @@ async function viewBookingDetails(bookingId) {
 
 // Show booking details modal
 function showBookingDetailsModal(booking) {
-    const customerName = booking.users ? 
-        `${booking.users.firstname || ''} ${booking.users.lastname || ''}`.trim() : 
+    const customerName = booking.users ?
+        `${booking.users.firstname || ''} ${booking.users.lastname || ''}`.trim() :
         'Unknown Customer';
-    
+
     const carName = booking.cars?.name || 'Unknown Car';
     const statusInfo = getStatusInfo(booking.booking_status);
-    
+
     const modalHTML = `
         <div class="booking-details-modal" onclick="closeBookingModal(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
@@ -1010,7 +1018,7 @@ function showBookingDetailsModal(booking) {
             </div>
         </div>
     `;
-    
+
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
@@ -1081,47 +1089,47 @@ function showSuccessMessage(message) {
         font-weight: 500;
         animation: slideInRight 0.3s ease;
     `;
-    
+
     document.body.appendChild(successDiv);
-    
+
     setTimeout(() => {
         successDiv.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => successDiv.remove(), 300);
     }, 3000);
 }
 function filterBookings(status = 'all') {
-  const bookingRows = document.querySelectorAll('.booking-row:not(.header)');
+    const bookingRows = document.querySelectorAll('.booking-row:not(.header)');
 
-  bookingRows.forEach(row => {
-    const statusBadge = row.querySelector('.status-badge');
-    if (!statusBadge) return;
+    bookingRows.forEach(row => {
+        const statusBadge = row.querySelector('.status-badge');
+        if (!statusBadge) return;
 
-    const rowStatus = statusBadge.classList[1];
-    const normalized = {
-      pickup_successful: 'pickup',
-      return_successful: 'return',
-      complete: 'completed'
-    }[rowStatus] || rowStatus;
+        const rowStatus = statusBadge.classList[1];
+        const normalized = {
+            pickup_successful: 'pickup',
+            return_successful: 'return',
+            complete: 'completed'
+        }[rowStatus] || rowStatus;
 
-    const matchesFilter = (status === 'all' || normalized === status);
+        const matchesFilter = (status === 'all' || normalized === status);
 
-    if (matchesFilter) {
-      // Restore correct layout type
-      if (window.innerWidth <= 768) {
-        row.style.display = 'flex'; // mobile card layout
-        row.style.flexDirection = 'column';
-      } else {
-        row.style.display = 'grid'; // desktop grid layout
-      }
-    } else {
-      row.style.display = 'none';
-    }
-  });
+        if (matchesFilter) {
+            // Restore correct layout type
+            if (window.innerWidth <= 768) {
+                row.style.display = 'flex'; // mobile card layout
+                row.style.flexDirection = 'column';
+            } else {
+                row.style.display = 'grid'; // desktop grid layout
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
 
-  // Update active filter button
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.filter === status);
-  });
+    // Update active filter button
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === status);
+    });
 }
 
 // Initialize filter buttons
@@ -1146,7 +1154,7 @@ function showPage(pageId, event) {
     if (event) {
         event.preventDefault();
     }
-    
+
     // Hide all pages with smooth transition
     document.querySelectorAll('.page').forEach(page => {
         page.style.opacity = '0';
@@ -1154,7 +1162,7 @@ function showPage(pageId, event) {
             page.style.display = 'none';
         }, 150);
     });
-    
+
     // Show selected page with smooth transition
     setTimeout(() => {
         const selectedPage = document.getElementById(pageId);
@@ -1163,7 +1171,7 @@ function showPage(pageId, event) {
             selectedPage.style.opacity = '1';
         }, 50);
     }, 150);
-    
+
     // Update active menu item
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
@@ -1171,7 +1179,7 @@ function showPage(pageId, event) {
     if (event && event.target) {
         event.target.classList.add('active');
     }
-    
+
     // Load specific page data
     if (pageId === 'managecar') {
         loadCars();
@@ -1181,7 +1189,7 @@ function showPage(pageId, event) {
         // Load booking page with dynamic data
         loadBookingPage();
     }
-    
+
     // Close mobile menu after navigation
     if (window.innerWidth <= 968) {
         closeMobileMenu();
@@ -1480,42 +1488,42 @@ styleSheet.textContent = additionalCSS;
 document.head.appendChild(styleSheet);
 // Set Admin Name from Supabase Auth -> Users -> display name
 async function setAdminDisplayNameFromSupabase() {
-  const el = document.getElementById('adminDisplayName');
-  if (!el || !window.supabaseClient) return;
-
-  try {
-    const { data: { user }, error } = await window.supabaseClient.auth.getUser();
-    if (error) throw error;
-
-    if (!user) {
-      el.textContent = 'Administrator';
-      return;
-    }
-
-    // Priority: display_name (Supabase Users metadata "Display name" field in dashboard)
-    let displayName =
-      user.user_metadata?.display_name ||
-      user.user_metadata?.displayName ||    // common variant
-      user.user_metadata?.full_name ||      // provider default
-      user.user_metadata?.name ||           // provider default
-      (user.user_metadata?.first_name && user.user_metadata?.last_name
-        ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : null);
-
-    el.textContent = displayName || user.email || 'Administrator';
-  } catch (e) {
-    console.warn('Name set failed:', e);
     const el = document.getElementById('adminDisplayName');
-    if (el) el.textContent = 'Administrator';
-  }
+    if (!el || !window.supabaseClient) return;
+
+    try {
+        const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+        if (error) throw error;
+
+        if (!user) {
+            el.textContent = 'Administrator';
+            return;
+        }
+
+        // Priority: display_name (Supabase Users metadata "Display name" field in dashboard)
+        let displayName =
+            user.user_metadata?.display_name ||
+            user.user_metadata?.displayName ||    // common variant
+            user.user_metadata?.full_name ||      // provider default
+            user.user_metadata?.name ||           // provider default
+            (user.user_metadata?.first_name && user.user_metadata?.last_name
+                ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : null);
+
+        el.textContent = displayName || user.email || 'Administrator';
+    } catch (e) {
+        console.warn('Name set failed:', e);
+        const el = document.getElementById('adminDisplayName');
+        if (el) el.textContent = 'Administrator';
+    }
 }
 
 // Init on load and keep in sync with auth changes
 document.addEventListener('DOMContentLoaded', () => {
-  setAdminDisplayNameFromSupabase();
+    setAdminDisplayNameFromSupabase();
 
-  if (window.supabaseClient?.auth?.onAuthStateChange) {
-    window.supabaseClient.auth.onAuthStateChange(() => {
-      setAdminDisplayNameFromSupabase();
-    });
-  }
+    if (window.supabaseClient?.auth?.onAuthStateChange) {
+        window.supabaseClient.auth.onAuthStateChange(() => {
+            setAdminDisplayNameFromSupabase();
+        });
+    }
 });
