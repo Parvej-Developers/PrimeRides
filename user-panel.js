@@ -12,9 +12,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     await initializeUserPanel();
     initializeNavigation();
     initializeFilters();
-    initializeForm();
     attachEventListeners();
 });
+
 
 // Check if user is authenticated and redirect if not
 async function checkAuthenticationAndRedirect() {
