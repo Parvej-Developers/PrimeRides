@@ -137,109 +137,113 @@ function closeMobileMenu() {
 
 // Load cars from Supabase
 async function loadCars() {
-  console.log('Loading cars with booking count...');
-  const carsContainer = document.getElementById('carsContainer');
+    console.log('Loading cars from Supabase...');
+    const carsContainer = document.getElementById('carsContainer');
 
-  if (!carsContainer) return;
-
-  carsContainer.innerHTML = `
-    <div class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Loading cars...</p>
-    </div>
-  `;
-
-  try {
-    const { data: cars, error } = await window.supabaseClient
-      .from('cars')
-      .select(`
-        *,
-        bookings:bookings(count)
-      `)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error(error);
-      carsContainer.innerHTML = `<p>Error loading cars</p>`;
-      return;
+    if (!carsContainer) {
+        console.error('Cars container not found');
+        return;
     }
 
-    renderCars(cars || []);
-  } catch (err) {
-    console.error(err);
-    carsContainer.innerHTML = `<p>Something went wrong</p>`;
-  }
+    // Show loading state
+    carsContainer.innerHTML = `
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading cars...</p>
+        </div>
+    `;
+
+    try {
+        const { data: cars, error } = await window.supabaseClient
+            .from('cars')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error loading cars:', error);
+            carsContainer.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Failed to load cars. Please try again.</p>
+                    <button class="btn btn-primary" onclick="loadCars()">Retry</button>
+                </div>
+            `;
+            return;
+        }
+
+        console.log('Cars loaded:', cars?.length || 0);
+        renderCars(cars || []);
+    } catch (error) {
+        console.error('Error loading cars:', error);
+        carsContainer.innerHTML = `
+            <div class="error-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Failed to load cars. Please check your connection.</p>
+            </div>
+        `;
+    }
 }
 
 // Render cars in the manage cars table
 function renderCars(cars) {
-  const carsContainer = document.getElementById('carsContainer');
+    const carsContainer = document.getElementById('carsContainer');
 
-  if (!cars || cars.length === 0) {
-    carsContainer.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-car"></i>
-        <h3>No cars found</h3>
-        <p>Add your first car</p>
-      </div>
-    `;
-    return;
-  }
+    if (!cars || cars.length === 0) {
+        carsContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-car"></i>
+                <h3>No cars found</h3>
+                <p>Add your first car to get started</p>
+                <button class="btn btn-primary" onclick="showPage('addcar', event)">
+                    <i class="fas fa-plus"></i>
+                    Add Car
+                </button>
+            </div>
+        `;
+        return;
+    }
 
-  const carsHTML = cars.map(car => {
-    const isAvailable = car.status !== 'unavailable';
-    const statusClass = isAvailable ? 'available' : 'not-available';
-    const statusText = isAvailable ? 'Available' : 'Not Available';
-    const toggleIcon = isAvailable ? 'fa-eye' : 'fa-eye-slash';
+    const carsHTML = cars.map(car => {
+        const isAvailable = car.status !== 'unavailable';
+        const statusClass = isAvailable ? 'available' : 'not-available';
+        const statusText = isAvailable ? 'Available' : 'Not Available';
+        const toggleIcon = isAvailable ? 'fa-eye' : 'fa-eye-slash';
 
-    // ✅ BOOKING COUNT
-    const bookingCount = car.bookings?.[0]?.count || 0;
+        return `
+            <div class="car-row" data-car-id="${car.id}">
+                <div class="car-info">
+                    <div class="car-image">
+                        ${car.image_url ?
+                `<img src="${car.image_url}" alt="${car.name}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />` :
+                `<i class="fas fa-car"></i>`
+            }
+                    </div>
+                    <div class="car-details">
+                        <strong>${car.name || 'Unknown Car'}</strong>
+                        <small>${car.type || ''} ‚ ${car.fuel || ''} ‚ ${car.transmission || ''}</small>
+                    </div>
+                </div>
+                <div class="car-price">${car.price || 'N/A'}</div>
+                <div class="car-status">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+                <div class="car-bookings">0 bookings</div>
+                <div class="car-actions">
+                    <button class="action-btn toggle-status" title="Toggle availability" data-car-id="${car.id}">
+                        <i class="fas ${toggleIcon}"></i>
+                    </button>
+                    <button class="action-btn edit-btn" title="Edit car" data-car-id="${car.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" title="Delete car" data-car-id="${car.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
 
-    return `
-      <div class="car-row" data-car-id="${car.id}">
-        
-        <div class="car-info">
-          <div class="car-image">
-            ${car.image_url
-              ? `<img src="${car.image_url}" alt="${car.name}">`
-              : `<i class="fas fa-car"></i>`}
-          </div>
-          <div class="car-details">
-            <strong>${car.name}</strong>
-            <small>${car.type} • ${car.fuel} • ${car.transmission}</small>
-          </div>
-        </div>
-
-        <div class="car-price">${car.price}</div>
-
-        <div class="car-status">
-          <span class="status-badge ${statusClass}">
-            ${statusText}
-          </span>
-        </div>
-
-        <!-- ✅ DYNAMIC BOOKINGS COLUMN -->
-        <div class="car-bookings">
-          ${bookingCount} booking${bookingCount !== 1 ? 's' : ''}
-        </div>
-
-        <div class="car-actions">
-          <button class="action-btn toggle-status" data-car-id="${car.id}">
-            <i class="fas ${toggleIcon}"></i>
-          </button>
-          <button class="action-btn edit-btn" data-car-id="${car.id}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="action-btn delete-btn" data-car-id="${car.id}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-
-      </div>
-    `;
-  }).join('');
-
-  carsContainer.innerHTML = carsHTML;
+    carsContainer.innerHTML = carsHTML;
 }
 
 // Toggle car status (available/unavailable)
