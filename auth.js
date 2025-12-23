@@ -1,4 +1,7 @@
 // =================== auth.js ===================
+function el(id) {
+  return document.getElementById(id);
+}
 
 // ========== Custom Notification System ==========
 function showNotification(message, type = 'success') {
@@ -77,9 +80,12 @@ function openModal(type) {
 }
 
 // Close modal on overlay click
-document.getElementById("overlay").addEventListener("click", (e) => {
-  if (e.target.id === "overlay") e.target.classList.remove("active");
-});
+const overlayEl = el("overlay");
+if (overlayEl) {
+  overlayEl.addEventListener("click", (e) => {
+    if (e.target.id === "overlay") e.target.classList.remove("active");
+  });
+}
 
 // ---------------- Submit Signup / Signin ----------------
 document.addEventListener("click", async (e) => {
@@ -245,7 +251,15 @@ function renderAuthButtons() {
 
 // ---------------- Auto-run on page load ----------------
 document.addEventListener("DOMContentLoaded", async () => {
-  const { data } = await supabase.auth.getSession();
+  if (!window.supabase) return;
+
+  const navLinks = document.getElementById("nav-links");
+  const navBtns = document.querySelector(".nav__btns");
+
+  // admin.html me auth UI hi nahi hota
+  if (!navLinks && !navBtns) return;
+
+  const { data } = await window.supabase.auth.getSession();
   if (data.session) {
     await loadUserRole();
   } else {

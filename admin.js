@@ -41,96 +41,40 @@ function showPage(pageId, event) {
     }
 }
 
-// FIXED Mobile Menu Toggle
 function initMobileMenu() {
-    const mobileToggle = document.getElementById('mobileMenuToggle');
-    const sidebar = document.getElementById('sidebar');
-    console.log('Initializing mobile menu...'); // Debug
-    console.log('Mobile toggle found:', !!mobileToggle);
-    console.log('Sidebar found:', !!sidebar);
+  const toggle = document.getElementById("menuToggle");
+  const sidebar = document.getElementById("sidebar");
 
-    if (mobileToggle && sidebar) {
-        // Remove existing event listeners by cloning
-        const newToggle = mobileToggle.cloneNode(true);
-        mobileToggle.parentNode.replaceChild(newToggle, mobileToggle);
+  console.log("Initializing mobile menu...");
+  console.log("Mobile toggle found:", !!toggle);
+  console.log("Sidebar found:", !!sidebar);
 
-        // Add event listener to new toggle
-        newToggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Mobile menu button clicked!'); // Debug
-            const isOpen = sidebar.classList.contains('open');
-            if (isOpen) {
-                closeMobileMenu();
-            } else {
-                openMobileMenu();
-            }
-        });
+  if (!toggle || !sidebar) {
+    console.error("Mobile menu elements not found!");
+    return;
+  }
 
-        // Close menu when clicking outside
-        document.addEventListener('click', function (e) {
-            const isClickInsideSidebar = sidebar.contains(e.target);
-            const isClickOnToggle = newToggle.contains(e.target);
-            if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('open')) {
-                closeMobileMenu();
-            }
-        });
+  toggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    sidebar.classList.toggle("open");
+  });
 
-        // Close menu on window resize to desktop
-        window.addEventListener('resize', function () {
-            if (window.innerWidth > 968 && sidebar.classList.contains('open')) {
-                closeMobileMenu();
-            }
-        });
-
-        // Close menu when clicking nav links on mobile
-        const navLinks = sidebar.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.addEventListener('click', function () {
-                if (window.innerWidth <= 968) {
-                    setTimeout(() => {
-                        closeMobileMenu();
-                    }, 300); // Delay to allow page transition
-                }
-            });
-        });
-
-        console.log('Mobile menu initialized successfully!'); // Debug
-    } else {
-        console.error('Mobile menu elements not found!');
+  document.addEventListener("click", (e) => {
+    if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+      sidebar.classList.remove("open");
     }
+  });
 }
 
 function openMobileMenu() {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('mobileMenuToggle');
-    if (sidebar && toggle) {
-        sidebar.classList.add('open');
-        toggle.classList.add('active');
-        document.body.classList.add('menu-open');
-        // Update icon
-        const icon = toggle.querySelector('i');
-        if (icon) {
-            icon.className = 'fas fa-times';
-        }
-        console.log('Mobile menu opened'); // Debug
-    }
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) sidebar.classList.add("open");
 }
 
 function closeMobileMenu() {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('mobileMenuToggle');
-    if (sidebar && toggle) {
-        sidebar.classList.remove('open');
-        toggle.classList.remove('active');
-        document.body.classList.remove('menu-open');
-        // Update icon
-        const icon = toggle.querySelector('i');
-        if (icon) {
-            icon.className = 'fas fa-bars';
-        }
-        console.log('Mobile menu closed'); // Debug
-    }
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) sidebar.classList.remove("open");
 }
 
 // === SUPABASE CAR MANAGEMENT ===
