@@ -62,22 +62,19 @@ function badgeTextFor(status) {
 async function loadCars() {
   if (!cardGrid) return;
 
-  if (!window.supabaseClient) {
-    console.error("supabaseClient is not defined. Check supabaseClient.js.");
-    cardGrid.innerHTML = "<p>Connection error. Please try again later.</p>";
+  if (!window.supabase) {
+    console.error("Supabase not initialized");
     return;
   }
 
-  const { data: cars, error } = await window.supabaseClient
+  const { data: cars, error } = await window.supabase
     .from("cars")
-    .select(
-      "id,name,type,price,seats,fuel,transmission,location,image_url,status,rate_per_day"
-    )
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error loading cars:", error);
-    cardGrid.innerHTML = "<p>Failed to load cars. Please try again later.</p>";
+    cardGrid.innerHTML = "<p>Failed to load cars</p>";
     return;
   }
 
@@ -145,10 +142,10 @@ function renderCars(list) {
  * Subscribe to realtime status updates and update only the status badge.
  */
 function initRealtimeStatus() {
-  if (!window.supabaseClient) return;
+  if (!window.supabase) return;
 
   try {
-    window.supabaseClient
+    window.supabase
       .channel("cars-status")
       .on(
         "postgres_changes",
@@ -195,9 +192,9 @@ function initSearch() {
   searchInput.addEventListener("input", async (event) => {
     const query = event.target.value.toLowerCase();
 
-    if (!window.supabaseClient) return;
+    if (!window.supabase) return;
 
-    const { data: filtered, error } = await window.supabaseClient
+    const { data: filtered, error } = await window.supabase
       .from("cars")
       .select(
         "id,name,type,price,seats,fuel,transmission,location,image_url,status,rate_per_day"

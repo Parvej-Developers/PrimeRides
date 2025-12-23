@@ -1279,8 +1279,6 @@
         }
       }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabaseClient.js"></script>
   </head>
 
   <body>
@@ -1649,7 +1647,7 @@
       // Load car details from Supabase
       async function loadCarFromSupabase(id) {
         try {
-          const { data, error } = await supabaseClient
+          const { data, error } = await supabase
             .from("cars")
             .select("*")
             .eq("id", id)
@@ -1806,14 +1804,14 @@
       async function loadUserData(userId) {
         try {
           // Try fetching user by user_id first, then by id
-          let { data, error } = await supabaseClient
+          let { data, error } = await supabase
             .from("users")
             .select("*")
             .eq("user_id", userId)
             .maybeSingle();
 
           if ((!data || error) && !data) {
-            ({ data, error } = await supabaseClient
+            ({ data, error } = await supabase
               .from("users")
               .select("*")
               .eq("id", userId)

@@ -18,13 +18,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Check if user is authenticated and redirect if not
 async function checkAuthenticationAndRedirect() {
-    const { data: { user } } = await supabase.auth.getUser();
+const { data: { user } } = await window.supabase.auth.getUser();
     if (!user) {
         alert('Please sign in to access the user panel');
         window.location.href = 'index.html';
         return;
     }
 }
+document.addEventListener("DOMContentLoaded", () => {
+  const menuBtn = document.getElementById("menuToggle");
+  if (menuBtn) {
+    menuBtn.addEventListener("click", toggleMobileMenu);
+  }
+});
+
 
 // Initialize user panel with dynamic data
 async function initializeUserPanel() {
@@ -44,7 +51,7 @@ async function initializeUserPanel() {
 
 // Get current user profile from Supabase
 async function getCurrentUserProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await window.supabase.auth.getUser();
     if (!user) return null;
     const { data, error } = await supabase
         .from('users')
@@ -60,7 +67,7 @@ async function getCurrentUserProfile() {
 
 // Get user bookings from Supabase
 async function getUserBookings() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await window.supabase.auth.getUser();
     if (!user) return [];
     const { data, error } = await supabase
         .from('bookings')
@@ -93,7 +100,7 @@ function populateSidebar() {
 
 async function populateUserProfile() {
   // Get Auth email and metadata fields
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await window.supabase.auth.getUser();
   if (!user || !currentUser) return;
 
   // Name and Role
@@ -366,7 +373,7 @@ async function updateProfile() {
         emergencycontactphone: data.get('emergencyPhone')
     };
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await window.supabase.auth.getUser();
     try {
         const { data, error } = await supabase
             .from('users')
@@ -532,7 +539,7 @@ async function downloadInvoice(bookingId) {
         doc.text('Name: ' + customerName, margin, yPosition);
         yPosition += 7;
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await window.supabase.auth.getUser();
         if (user && user.email) {
             doc.text('Email: ' + user.email, margin, yPosition);
             yPosition += 7;
@@ -809,4 +816,11 @@ function showBookingModal(booking) {
     </div>
   `;
   document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+function initializeForm() {
+  // form already handled
+}
+
+function attachEventListeners() {
+  // optional future use
 }

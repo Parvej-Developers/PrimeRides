@@ -101,7 +101,10 @@ document.addEventListener("click", async (e) => {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+   const { error } = await window.supabase.auth.signInWithPassword({
+  email,
+  password
+});
 
     if (error) {
       showNotification(error.message, "error");
@@ -150,7 +153,7 @@ async function logout() {
 
 // ---------------- Load user role ----------------
 async function loadUserRole() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) {
     renderAuthButtons();
     return;

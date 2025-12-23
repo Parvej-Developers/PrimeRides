@@ -154,7 +154,7 @@ async function loadCars() {
     `;
 
     try {
-        const { data: cars, error } = await window.supabaseClient
+        const { data: cars, error } = await window.supabase
             .from('cars')
             .select('*')
             .order('created_at', { ascending: false });
@@ -250,7 +250,7 @@ function renderCars(cars) {
 async function toggleCarStatus(carId) {
     try {
         // Get current car data
-        const { data: car, error: fetchError } = await window.supabaseClient
+        const { data: car, error: fetchError } = await window.supabase
             .from('cars')
             .select('status')
             .eq('id', carId)
@@ -267,7 +267,7 @@ async function toggleCarStatus(carId) {
         const newStatus = currentStatus === 'available' ? 'unavailable' : 'available';
 
         // Update in Supabase
-        const { error: updateError } = await window.supabaseClient
+        const { error: updateError } = await window.supabase
             .from('cars')
             .update({ status: newStatus })
             .eq('id', carId);
@@ -320,7 +320,7 @@ async function deleteCar(carId) {
     }
 
     try {
-        const { error } = await window.supabaseClient
+        const { error } = await window.supabase
             .from('cars')
             .delete()
             .eq('id', carId);
@@ -379,7 +379,7 @@ function initCarActions() {
 // Add new car to Supabase
 async function addCar(carData) {
     try {
-        const { data, error } = await window.supabaseClient
+        const { data, error } = await window.supabase
             .from('cars')
             .insert([{
                 ...carData,
@@ -458,7 +458,7 @@ async function uploadCarImage(file) {
     const ext = file.name.split('.').pop();
     const fileName = `cars/${Date.now()}.${ext}`;
 
-    const { error } = await window.supabaseClient
+    const { error } = await window.supabase
         .storage
         .from('Images')
         .upload(fileName, file);
@@ -468,7 +468,7 @@ async function uploadCarImage(file) {
         return null;
     }
 
-    const { data } = window.supabaseClient
+    const { data } = window.supabase
         .storage
         .from('Images')
         .getPublicUrl(fileName);
@@ -488,11 +488,11 @@ async function loadDashboardStats() {
 
     try {
         // 1. Load Basic Counters (Existing Functionality)
-        const { data: cars, error: carsError } = await window.supabaseClient
+        const { data: cars, error: carsError } = await window.supabase
             .from('cars')
             .select('status');
 
-        const { data: bookings, error: bookingsError } = await window.supabaseClient
+        const { data: bookings, error: bookingsError } = await window.supabase
             .from('bookings')
             .select('id');
 
@@ -554,7 +554,7 @@ async function loadRecentBookingsWidget() {
 
     try {
         // Fetch top 4 most recent bookings
-        const { data: bookings, error } = await window.supabaseClient
+        const { data: bookings, error } = await window.supabase
             .from('bookings')
             .select(`
                 id, created_at, total_amount, booking_status, pickup_date,
@@ -622,14 +622,14 @@ async function loadRevenueStats() {
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
         // 1. Fetch Current Month Revenue (excluding cancelled)
-        const { data: currentMonthData, error: currError } = await window.supabaseClient
+        const { data: currentMonthData, error: currError } = await window.supabase
             .from('bookings')
             .select('total_amount')
             .gte('created_at', startOfCurrentMonth)
             .neq('booking_status', 'cancelled');
 
         // 2. Fetch Last Month Revenue (for comparison)
-        const { data: lastMonthData, error: lastError } = await window.supabaseClient
+        const { data: lastMonthData, error: lastError } = await window.supabase
             .from('bookings')
             .select('total_amount')
             .gte('created_at', startOfLastMonth)
@@ -750,7 +750,7 @@ async function loadBookings() {
 
     try {
         // This allows Supabase to automatically find the connection based on your schema
-        const { data: bookings, error } = await window.supabaseClient
+        const { data: bookings, error } = await window.supabase
             .from('bookings')
             .select(`
                 *,
@@ -1313,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM Content Loaded - Initializing Admin Dashboard...');
 
     // Check if Supabase client is available
-    if (!window.supabaseClient) {
+    if (!window.supabase) {
         console.error('Supabase client not found! Make sure supabaseClient.js is loaded.');
         showNotification('Database connection failed. Please refresh the page.', 'error');
         return;
@@ -1489,10 +1489,10 @@ document.head.appendChild(styleSheet);
 // Set Admin Name from Supabase Auth -> Users -> display name
 async function setAdminDisplayNameFromSupabase() {
     const el = document.getElementById('adminDisplayName');
-    if (!el || !window.supabaseClient) return;
+    if (!el || !window.supabase) return;
 
     try {
-        const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+        const { data: { user }, error } = await window.supabase.auth.getUser();
         if (error) throw error;
 
         if (!user) {
@@ -1521,8 +1521,8 @@ async function setAdminDisplayNameFromSupabase() {
 document.addEventListener('DOMContentLoaded', () => {
     setAdminDisplayNameFromSupabase();
 
-    if (window.supabaseClient?.auth?.onAuthStateChange) {
-        window.supabaseClient.auth.onAuthStateChange(() => {
+    if (window.supabase?.auth?.onAuthStateChange) {
+        window.supabase.auth.onAuthStateChange(() => {
             setAdminDisplayNameFromSupabase();
         });
     }
@@ -1554,11 +1554,11 @@ async function exportDashboardPDF() {
     /* =====================
        FETCH LIVE DATA
     ===================== */
-    const { data: cars } = await window.supabaseClient
+    const { data: cars } = await window.supabase
         .from('cars')
         .select('*');
 
-    const { data: bookings } = await window.supabaseClient
+    const { data: bookings } = await window.supabase
         .from('bookings')
         .select('total_amount, created_at')
         .neq('booking_status', 'cancelled');
