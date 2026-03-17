@@ -215,6 +215,40 @@ Explains the 3-step rental process:
 * Duration & total charges
 * Tax calculation
 * Final confirmation
+---
+
+## 💳 Payment Integration
+
+PrimeRides includes a secure online payment system powered by **Razorpay (Test Mode)**.
+
+### 🔹 Features
+
+* Secure online payment processing
+* Razorpay test mode integration for safe transactions
+* Automatic rental cost calculation before payment
+* Payment confirmation after successful booking
+
+### 🔹 How It Works
+
+1. User selects a car and rental duration
+2. System calculates total cost (including taxes)
+3. User proceeds to payment
+4. Razorpay payment gateway is opened
+5. On successful payment, booking is confirmed and stored in the database
+
+### 🔹 Test Payment Details
+
+This project uses **Razorpay Test Mode**, so no real money is charged.
+
+You can use Razorpay’s test credentials:
+
+* Card Number: `4111 1111 1111 1111`
+* Expiry Date: Any future date
+* CVV: Any 3 digits
+* OTP: `123456`
+
+> ⚠️ Note: This is a demo payment system. No real transactions are processed.
+
 
 ---
 
