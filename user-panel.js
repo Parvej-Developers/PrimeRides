@@ -880,61 +880,52 @@ function attachEventListeners() {
 }
 
 
-
 function showBookingModal(booking) {
   const modalHTML = `
-    <div class="modal-overlay" id="bookingModal">
-      <div class="modal-box animate-in">
+    <div class="modal-overlay active" id="bookingModal">
+      <div class="modal-box">
         <div class="modal-header">
           <h3>Booking Details</h3>
           <button class="close-modal" onclick="closeBookingModal()">×</button>
         </div>
+
         <div class="modal-body">
           <div class="modal-summary">
-            <img src="${booking.cars?.image_url || ''}" alt="${booking.cars?.name || 'Car'}"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="modal-info">
+            <img src="${booking.cars?.image_url || ''}" 
+                 onerror="this.style.display='none';">
+            
+            <div>
               <h2>${booking.cars?.name || 'Car'} ${booking.cars?.type || ''}</h2>
-              <p><strong>Status:</strong> ${booking.booking_status}</p>
-              <p><strong>Total:</strong> ₹${booking.total_amount?.toLocaleString() || 0}</p>
+              <p><b>Status:</b> ${booking.booking_status}</p>
+              <p><b>Total:</b> ₹${booking.total_amount}</p>
             </div>
           </div>
+
           <div class="detail-grid">
-            <div><strong>Booking ID:</strong> ${booking.id}</div>
-            <div><strong>Status:</strong> ${booking.booking_status}</div>
-            <div><strong>Pickup Date:</strong> ${formatDate(booking.pickup_date)}</div>
-            <div><strong>Return Date:</strong> ${formatDate(booking.return_date)}</div>
-            <div><strong>Pickup Time:</strong> ${formatTime(booking.pickup_time)}</div>
-            <div><strong>Return Time:</strong> ${formatTime(booking.return_time)}</div>
-            <div><strong>Pickup Location:</strong> ${booking.pickup_location}</div>
-            <div><strong>Return Location:</strong> ${booking.return_location}</div>
-            <div><strong>Total Days:</strong> ${booking.total_days}</div>
-            <div><strong>Daily Rate:</strong> ₹${booking.daily_rate?.toLocaleString()}</div>
-            <div><strong>Subtotal:</strong> ₹${booking.subtotal?.toLocaleString()}</div>
-            <div><strong>Taxes:</strong> ₹${booking.taxes?.toLocaleString()}</div>
-            <div><strong>Security Deposit:</strong> ₹${booking.security_deposit?.toLocaleString()}</div>
-            <div><strong>Total Amount:</strong> ₹${booking.total_amount?.toLocaleString()}</div>
-            <div><strong>Payment Status:</strong> ${booking.payment_status}</div>
-            <div><strong>Payment Method:</strong> ${booking.payment_method}</div>
-            ${booking.special_requests ? `<div><strong>Special Requests:</strong> ${booking.special_requests}</div>` : ''}
+            <div><b>Booking ID:</b> ${booking.id}</div>
+            <div><b>Pickup:</b> ${formatDate(booking.pickup_date)} ${formatTime(booking.pickup_time)}</div>
+            <div><b>Return:</b> ${formatDate(booking.return_date)} ${formatTime(booking.return_time)}</div>
+            <div><b>Location:</b> ${booking.pickup_location}</div>
+            <div><b>Total Days:</b> ${booking.total_days}</div>
           </div>
         </div>
+
         <div class="modal-footer">
-          <button class="btn btn-outline" onclick="downloadInvoice('${booking.id}')">📄 Download Invoice</button>
-          <button class="btn btn-primary" onclick="closeBookingModal()">Close</button>
+          <button class="btn btn-outline" onclick="downloadInvoice('${booking.id}')">
+            Download Invoice
+          </button>
+          <button class="btn btn-primary" onclick="closeBookingModal()">
+            Close
+          </button>
         </div>
       </div>
     </div>
   `;
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
-function initializeForm() {
-  // form already handled
+
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
 }
 
-function attachEventListeners() {
-  // optional future use
-}
+
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("updateProfileForm");
     if (form) {
