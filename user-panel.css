@@ -195,7 +195,9 @@ body.menu-open {
   animation: fadeInUp 0.7s;
   color: #fff;
   position: relative;
-  transition: box-shadow 0.25s, transform 0.22s;
+  transition:
+    box-shadow 0.25s,
+    transform 0.22s;
 }
 .profile-center {
   display: flex;
@@ -261,7 +263,10 @@ body.menu-open {
   font-size: 1.2em;
   margin-top: 0.4em;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.09);
-  transition: background 0.18s, color 0.18s, transform 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    transform 0.18s;
 }
 .profile-edit-btn:hover {
   background: #6366f1;
@@ -278,7 +283,10 @@ body.menu-open {
   color: #fff;
   font-size: 1.4rem;
   opacity: 0.85;
-  transition: color 0.18s, opacity 0.18s, transform 0.18s;
+  transition:
+    color 0.18s,
+    opacity 0.18s,
+    transform 0.18s;
 }
 .profile-social a:hover {
   color: #ffd700;
@@ -390,7 +398,9 @@ body.menu-open {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
-  transition: transform 0.25s, box-shadow 0.25s;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s;
   height: 100%;
   min-width: 0;
   max-width: 420px;
@@ -520,7 +530,10 @@ body.menu-open {
   cursor: pointer;
   background: #e5e7eb;
   color: #374151;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
   box-shadow: none;
   outline: none;
   border: 2px solid transparent;
@@ -569,7 +582,10 @@ body.menu-open {
   font-weight: 600;
   font-size: 1em;
   cursor: pointer;
-  transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+  transition:
+    background 0.18s,
+    box-shadow 0.18s,
+    transform 0.18s;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
   display: flex;
   align-items: center;
@@ -606,7 +622,11 @@ body.menu-open {
   padding: 0.7em 2em;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s,
+    transform 0.18s;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
   display: flex;
   align-items: center;
@@ -630,7 +650,9 @@ body.menu-open {
   width: 100%;
   margin: 2.5rem auto;
   animation: fadeInUp 0.7s;
-  transition: box-shadow 0.22s, transform 0.18s;
+  transition:
+    box-shadow 0.22s,
+    transform 0.18s;
   position: relative;
 }
 
@@ -648,7 +670,9 @@ body.menu-open {
   border-radius: 14px;
   padding: 1.5rem 1.2rem 1.2rem 1.2rem;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.04);
-  transition: box-shadow 0.2s, background 0.2s;
+  transition:
+    box-shadow 0.2s,
+    background 0.2s;
 }
 .form-section:hover,
 .form-section:focus-within {
@@ -703,7 +727,9 @@ body.menu-open {
   border-radius: 7px;
   font-size: 1em;
   background: #f9fafb;
-  transition: border 0.2s, box-shadow 0.2s;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
   outline: none;
 }
 .form-group input:focus,
@@ -781,9 +807,15 @@ body.menu-open {
   justify-content: center;
 }
 .modal-overlay {
-  display: flex !important;
   z-index: 2000;
   animation: fadeIn 0.3s;
+}
+.modal-overlay {
+  display: none;
+}
+
+.modal-overlay.active {
+  display: flex;
 }
 .modal-content,
 .modal-box {
@@ -1097,4 +1129,113 @@ body.menu-open {
   .custom-notification span {
     font-size: 13px;
   }
+}
+.driver-card.center {
+  max-width: 400px;
+  margin: 60px auto;
+  text-align: center;
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+.status-badge.pending {
+  background: #facc15;
+  color: #000;
+}
+
+.status-badge.success {
+  background: #10b981;
+  color: white;
+}
+
+.status-badge.error {
+  background: #ef4444;
+  color: white;
+}
+.driver-tracking-container {
+  max-width: 600px;
+  margin: 60px auto;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.driver-progress {
+  margin: 30px 0;
+}
+
+.progress-line {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  position: relative;
+}
+
+#progressFill {
+  height: 6px;
+  background: #10b981;
+  width: 0%;
+  border-radius: 10px;
+  transition: 0.4s ease;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.step {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.step.active {
+  color: #10b981;
+  font-weight: 600;
+}
+.image-upload-box {
+  text-align: center;
+}
+
+.image-upload-box img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e5e7eb;
+  margin-bottom: 10px;
+}
+
+.doc-preview {
+  width: 100%;
+  max-width: 200px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #e5e7eb;
+  margin-bottom: 10px;
+  display: block;
+}
+.doc-preview {
+  width: 100%;
+  max-width: 140px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 8px;
+  display: none;
+  border: 1px solid #ddd;
 }

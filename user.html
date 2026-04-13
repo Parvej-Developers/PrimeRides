@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -174,41 +174,33 @@
           <div class="page-header">
             <div class="page-title">
               <h1>
-                <i
-                  class="ri-edit-2-line"
-                  style="
-                    font-size: 1.3em;
-                    vertical-align: middle;
-                    color: var(--primary);
-                  "
-                ></i>
+                <i class="ri-edit-2-line" style="color: var(--primary)"></i>
                 <span style="margin-left: 0.4em">Update Profile</span>
               </h1>
-              <p>Edit your personal information and preferences</p>
+              <p>Edit your personal information and documents</p>
             </div>
           </div>
 
           <div class="update-form">
             <div class="update-form-glass">
-              <!-- ...your form as it is... -->
               <form id="updateProfileForm">
                 <div class="form-section">
-                  <h3>
-                    <i
-                      class="ri-user-3-line"
-                      style="color: var(--primary); margin-right: 0.4em"
-                    ></i>
-                    Personal Details
-                  </h3>
+                  <h3><i class="ri-image-line"></i> Profile Photo</h3>
+
+                  <div class="image-upload-box">
+                    <img id="profilePreview" class="doc-preview" />
+                    <input type="file" id="profileImage" accept="image/*" />
+                    <p>Upload your profile photo</p>
+                  </div>
+                </div>
+
+                <!-- PERSONAL -->
+                <div class="form-section">
+                  <h3><i class="ri-user-3-line"></i> Personal Details</h3>
+
                   <div class="form-grid">
                     <div class="form-group">
-                      <label for="firstName">
-                        <i
-                          class="ri-user-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        First Name *
-                      </label>
+                      <label>First Name *</label>
                       <input
                         type="text"
                         id="firstName"
@@ -216,14 +208,9 @@
                         required
                       />
                     </div>
+
                     <div class="form-group">
-                      <label for="lastName">
-                        <i
-                          class="ri-user-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        Last Name *
-                      </label>
+                      <label>Last Name *</label>
                       <input
                         type="text"
                         id="lastName"
@@ -233,146 +220,86 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="phone">
-                        <i
-                          class="ri-phone-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        Phone Number
-                      </label>
+                      <label>Phone</label>
                       <input type="tel" id="phone" name="phone" />
                     </div>
+
                     <div class="form-group">
-                      <label for="dateOfBirth">
-                        <i
-                          class="ri-calendar-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        Date of Birth
-                      </label>
+                      <label>Date of Birth</label>
                       <input type="date" id="dateOfBirth" name="dateOfBirth" />
                     </div>
                   </div>
                 </div>
 
+                <!-- ADDRESS -->
                 <div class="form-section">
-                  <h3>
-                    <i
-                      class="ri-map-pin-line"
-                      style="color: var(--primary); margin-right: 0.4em"
-                    ></i>
-                    Address Information
-                  </h3>
+                  <h3><i class="ri-map-pin-line"></i> Address</h3>
+
                   <div class="form-grid">
                     <div class="form-group full-width">
-                      <label for="address">
-                        <i
-                          class="ri-road-map-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        Street Address
-                      </label>
+                      <label>Street Address</label>
                       <input type="text" id="address" name="address" />
                     </div>
+
                     <div class="form-group">
-                      <label for="city">
-                        <i
-                          class="ri-building-2-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        City
-                      </label>
+                      <label>City</label>
                       <input type="text" id="city" name="city" />
                     </div>
+
                     <div class="form-group">
-                      <label for="state">
-                        <i
-                          class="ri-map-pin-user-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        State
-                      </label>
+                      <label>State</label>
                       <input type="text" id="state" name="state" />
                     </div>
+
                     <div class="form-group">
-                      <label for="zipCode">
-                        <i
-                          class="ri-mail-send-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        ZIP Code
-                      </label>
+                      <label>ZIP Code</label>
                       <input type="text" id="zipCode" name="zipCode" />
                     </div>
                   </div>
                 </div>
 
+                <!-- 🔥 LICENSE + AADHAAR -->
                 <div class="form-section">
-                  <h3>
-                    <i
-                      class="ri-car-line"
-                      style="color: var(--primary); margin-right: 0.4em"
-                    ></i>
-                    License & Emergency Contact
-                  </h3>
+                  <h3><i class="ri-car-line"></i> License & Documents</h3>
+
                   <div class="form-grid">
                     <div class="form-group">
-                      <label for="licenseNumber">
-                        <i
-                          class="ri-id-card-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        Driver's License Number
-                      </label>
+                      <label>License Number</label>
                       <input
                         type="text"
                         id="licenseNumber"
                         name="licenseNumber"
                       />
                     </div>
+
+                    <!-- LICENSE -->
                     <div class="form-group">
-                      <label for="emergencyContact">
-                        <i
-                          class="ri-user-heart-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        Emergency Contact Name
-                      </label>
-                      <input
-                        type="text"
-                        id="emergencyContact"
-                        name="emergencyContact"
-                      />
+                      <label>License Image</label>
+                      <img id="licensePreview" class="doc-preview" />
+                      <input type="file" id="licenseImage" accept="image/*" />
                     </div>
+
+                    <!-- AADHAAR -->
                     <div class="form-group">
-                      <label for="emergencyPhone">
-                        <i
-                          class="ri-phone-find-line"
-                          style="color: var(--primary); margin-right: 0.2em"
-                        ></i>
-                        Emergency Contact Phone
-                      </label>
-                      <input
-                        type="tel"
-                        id="emergencyPhone"
-                        name="emergencyPhone"
-                      />
+                      <label>Aadhaar Image</label>
+                      <img id="aadhaarPreview" class="doc-preview" />
+                      <input type="file" id="aadhaarImage" accept="image/*" />
                     </div>
                   </div>
                 </div>
 
+                <!-- ACTIONS -->
                 <div class="form-actions">
                   <button
                     type="button"
                     class="btn btn-secondary"
                     onclick="resetForm()"
                   >
-                    <i class="ri-refresh-line" style="margin-right: 0.3em"></i>
-                    Reset
+                    <i class="ri-refresh-line"></i> Reset
                   </button>
+
                   <button type="submit" class="btn btn-primary">
-                    <i class="ri-save-3-line" style="margin-right: 0.3em"></i>
-                    Update Profile
+                    <i class="ri-save-3-line"></i> Update Profile
                   </button>
                 </div>
               </form>
@@ -381,7 +308,22 @@
         </div>
       </section>
     </main>
-
+    <div id="confirmModal" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="confirmTitle">Confirm</h3>
+        </div>
+        <div class="modal-body">
+          <p id="confirmMessage">Are you sure?</p>
+        </div>
+        <div class="modal-footer">
+          <button onclick="closeConfirmModal()" class="btn btn-secondary">
+            Cancel
+          </button>
+          <button id="confirmOkBtn" class="btn btn-primary">Yes</button>
+        </div>
+      </div>
+    </div>
     <script src="supabaseClient.js"></script>
     <script src="auth.js"></script>
     <script src="user-panel.js"></script>

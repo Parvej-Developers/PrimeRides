@@ -42,7 +42,7 @@ async function initializeUserPanel() {
         populateSidebar();
         populateUserProfile();
         populateUserBookings();
-        populateUpdateForm();
+        populateUpdateForm();  
     } catch (error) {
         console.error('Error initializing user panel:', error);
         showNotification('Error loading user data', 'error');
@@ -50,18 +50,37 @@ async function initializeUserPanel() {
 }
 
 // Get current user profile from Supabase
-async function getCurrentUserProfile() {
+
+   async function getCurrentUserProfile() {
     const { data: { user } } = await window.supabase.auth.getUser();
     if (!user) return null;
-    const { data, error } = await supabase
+
+    let { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .single();
-    if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
+        .maybeSingle();
+
+        if (!data) {
+        const { error: insertError } = await supabase
+            .from('users')
+            .insert([{ id: user.id }]);
+
+        if (insertError) {
+            console.error(insertError);
+            return null;
+        }
+
+        // दुबारा fetch करो
+        const { data: newData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+        return newData;
     }
+
     return data;
 }
 
@@ -87,14 +106,26 @@ async function getUserBookings() {
 // Populate sidebar with user info
 function populateSidebar() {
     if (!currentUser) return;
+
     const userNameElement = document.querySelector('.user-name');
     const profileImg = document.querySelector('.profile-img');
+
     if (userNameElement) {
-        const fullName = `${currentUser.firstname || ''} ${currentUser.lastname || ''}`.trim();
+        const fullName = `${currentUser?.firstname || ''} ${currentUser.lastname || ''}`.trim();
         userNameElement.textContent = fullName || 'User';
     }
-    if (profileImg && currentUser.firstname) {
-        profileImg.textContent = currentUser.firstname.charAt(0).toUpperCase();
+
+    // 🔥 PROFILE IMAGE FIX
+    if (profileImg) {
+        if (currentUser?.profile_image) {
+            const url = supabase.storage
+                .from("user-documents")
+                .getPublicUrl(currentUser.profile_image).data.publicUrl + `?t=${Date.now()}`;
+
+            profileImg.innerHTML = `<img src="${url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        } else {
+            profileImg.textContent = currentUser?.firstname?.charAt(0)?.toUpperCase() || 'U';
+        }
     }
 }
 
@@ -105,7 +136,7 @@ async function populateUserProfile() {
 
   // Name and Role
   document.querySelector('.profile-name').textContent =
-    `${currentUser.firstname || ''} ${currentUser.lastname || ''}`.trim() || 'User';
+    `${currentUser?.firstname || ''} ${currentUser.lastname || ''}`.trim() || 'User';
   document.querySelector('.profile-role').textContent =
     currentUser.role || 'User';
 
@@ -123,7 +154,7 @@ async function populateUserProfile() {
     'Phone': currentUser.phone || 'Not provided',
     'Address': address || 'Not provided',
     'Date of Birth': currentUser.dateofbirth || 'Not provided',
-    "Driver's License": currentUser.licensenumber || 'Not provided',
+    "Driver's License": currentUser.license_number || 'Not provided',
     'Membership': currentUser.premium_member ? 'Premium' : 'Basic',
     'Account Status': currentUser.account_verified ? 'Active' : 'Pending',
     'Joined On': currentUser.created_at ? new Date(currentUser.created_at).toLocaleDateString('en-CA') : 'Unknown'
@@ -230,17 +261,12 @@ function createBookingCard(booking) {
 function getStatusClass(s) {
   const k = (s || '').toLowerCase();
   const map = {
-    // Core user-facing buckets
     pending: 'pending',
     confirmed: 'upcoming',
-    active: 'upcoming',
-    // Server-side lifecycle variants supported by admin panel
-    pickup_successful: 'upcoming',
-    return_successful: 'upcoming',
-    complete: 'completed',
+    pickup_done: 'upcoming',
+    return_done: 'upcoming',
     completed: 'completed',
-    cancelled: 'cancelled',
-    canceled: 'cancelled'
+    cancelled: 'cancelled'
   };
   return map[k] || 'pending';
 }
@@ -265,34 +291,60 @@ function normalizeStatus(status) {
 // Can cancel?
 function canCancelBooking(b) {
     const s = b.booking_status?.toLowerCase();
-    return ['upcoming','confirmed','pending'].includes(s);
+    return ['pending','confirmed'].includes(s);
 }
 
 // Populate update form with current data
 function populateUpdateForm() {
+  
     if (!currentUser) return;
+
     const form = document.getElementById('updateProfileForm');
     if (!form) return;
-    const fields = {
-        firstName: currentUser.firstname,
-        lastName: currentUser.lastname,
-        email: currentUser.email,
-        phone: currentUser.phone,
-        dateOfBirth: currentUser.dateofbirth,
-        address: currentUser.address,
-        city: currentUser.city,
-        state: currentUser.state,
-        zipCode: currentUser.zipcode,
-        licenseNumber: currentUser.licensenumber,
-        emergencyContact: currentUser.emergencycontactname,
-        emergencyPhone: currentUser.emergencycontactphone
-    };
-    Object.entries(fields).forEach(([name, val]) => {
-        const inp = form.querySelector(`[name="${name}"]`);
-        if (inp) inp.value = val || '';
-    });
-}
 
+    // 🟢 TEXT FIELDS
+    form.querySelector('[name="firstName"]').value = currentUser.firstname || "";
+    form.querySelector('[name="lastName"]').value = currentUser.lastname || "";
+    form.querySelector('[name="phone"]').value = currentUser.phone || "";
+    form.querySelector('[name="dateOfBirth"]').value = currentUser.dateofbirth || "";
+    form.querySelector('[name="address"]').value = currentUser.address || "";
+    form.querySelector('[name="city"]').value = currentUser.city || "";
+    form.querySelector('[name="state"]').value = currentUser.state || "";
+    form.querySelector('[name="zipCode"]').value = currentUser.zipcode || "";
+    form.querySelector('[name="licenseNumber"]').value = currentUser.license_number || "";
+
+    // 🔥 HELPER FUNCTION (CACHE FIX)
+    const getImageUrl = (path) => {
+        if (!path) return "";
+        return supabase.storage
+            .from("user-documents")
+            .getPublicUrl(path).data.publicUrl + `?t=${Date.now()}`;
+    };
+
+    // 🟢 PROFILE IMAGE
+    const profilePreview = document.getElementById("profilePreview");
+    if (currentUser.profile_image) {
+        profilePreview.src = getImageUrl(currentUser.profile_image);
+        profilePreview.style.display = "block";
+    }
+
+    // 🟢 LICENSE IMAGE
+    const licensePreview = document.getElementById("licensePreview");
+    if (currentUser.license_image) {
+        licensePreview.src = getImageUrl(currentUser.license_image);
+        licensePreview.style.display = "block";
+    }
+
+    // 🟢 AADHAAR IMAGE
+    const aadhaarPreview = document.getElementById("aadhaarPreview");
+    if (currentUser.aadhaar_image) {
+        aadhaarPreview.src = getImageUrl(currentUser.aadhaar_image);
+        aadhaarPreview.style.display = "block";
+    }
+    console.log("PROFILE IMAGE PATH:", currentUser.profile_image);
+console.log("LICENSE IMAGE PATH:", currentUser.license_image);
+console.log("AADHAAR IMAGE PATH:", currentUser.aadhaar_image);
+}
 // Navigation
 function initializeNavigation() {
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -319,16 +371,6 @@ function toggleMobileMenu() {
     document.body.classList.toggle('menu-open', mobileMenuOpen);
 }
 
-// Filters
-function initializeFilters() {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            filterBookings(btn.dataset.filter);
-        });
-    });
-}
 function filterBookings(filter) {
     document.querySelectorAll('.booking-card').forEach(card => {
         const status = card.dataset.status;
@@ -353,52 +395,111 @@ function initializeFilters() {
 }
 
 async function updateProfile() {
+    
     const btn = document.querySelector('button[type="submit"]');
     const original = btn.innerHTML;
     btn.textContent = 'Updating...';
     btn.disabled = true;
 
-    const data = new FormData(document.getElementById('updateProfileForm'));
-    const updates = {
-        firstname: data.get('firstName'),
-        lastname: data.get('lastName'),
-        phone: data.get('phone'),
-        dateofbirth: data.get('dateOfBirth'),
-        address: data.get('address'),
-        city: data.get('city'),
-        state: data.get('state'),
-        zipcode: data.get('zipCode'),
-        licensenumber: data.get('licenseNumber'),
-        emergencycontactname: data.get('emergencyContact'),
-        emergencycontactphone: data.get('emergencyPhone')
-    };
+    const form = document.getElementById('updateProfileForm');
+    const data = new FormData(form);
 
-    const { data: { user } } = await window.supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+
     try {
-        const { data, error } = await supabase
-            .from('users')
-            .update(updates)
-            .eq('id', user.id)
-            .select()
-            .single();
-        if (error) throw error;
-        currentUser = data;
-        populateUserProfile();
-        populateSidebar();
-        btn.textContent = 'Updated!';
-        btn.classList.replace('btn-primary', 'btn-success');
+        // FILES
+        const licenseFile = document.getElementById("licenseImage")?.files[0];
+        const aadhaarFile = document.getElementById("aadhaarImage")?.files[0];
+
+        let licensePath = currentUser?.license_image || "";
+        let aadhaarPath = currentUser?.aadhaar_image || "";
+
+      if (licenseFile) {
+  const path = `${user.id}/license.jpg`;
+
+  await deleteOldFile(currentUser?.license_image);
+
+  const { error } = await supabase.storage
+    .from("user-documents")
+    .upload(path, licenseFile, { upsert: true });
+
+  if (error) throw error;
+
+  licensePath = path;
+}
+
+       if (aadhaarFile) {
+  const path = `${user.id}/aadhaar.jpg`;
+
+  await deleteOldFile(currentUser?.aadhaar_image);
+
+  const { error } = await supabase.storage
+    .from("user-documents")
+    .upload(path, aadhaarFile, { upsert: true });
+
+  if (error) throw error;
+
+  aadhaarPath = path;
+}
+        
+const profileFile = document.getElementById("profileImage")?.files[0];
+let profilePath = currentUser?.profile_image || "";
+
+if (profileFile) {
+  const path = `${user.id}/profile.jpg`;
+
+  await deleteOldFile(currentUser?.profile_image);
+
+  const { error } = await supabase.storage
+    .from("user-documents")
+    .upload(path, profileFile, { upsert: true });
+
+  if (error) throw error;
+
+  profilePath = path;
+}
+   const { error } = await supabase
+  .from('users')
+  .update({
+    firstname: data.get('firstName'),
+    lastname: data.get('lastName'),
+    phone: data.get('phone'),
+    dateofbirth: data.get('dateOfBirth'),
+    address: data.get('address'),
+    city: data.get('city'),
+    state: data.get('state'),
+    zipcode: data.get('zipCode'),
+    license_number: data.get('licenseNumber'),
+    license_image: licensePath,
+    aadhaar_image: aadhaarPath,
+    profile_image: profilePath   // 🔥 ADD THIS LINE
+  })
+  .eq('id', user.id);
+
+if (error) throw error;
+
+// 🔥 IMPORTANT FIX
+const { data: updatedUser } = await supabase
+  .from('users')
+  .select('*')
+  .eq('id', user.id)
+  .single();
+
+currentUser = updatedUser;
+
+populateUserProfile();
+populateSidebar();
+populateUpdateForm(); 
         showNotification('Profile updated successfully!', 'success');
-        setTimeout(() => {
-            btn.innerHTML = original;
-            btn.disabled = false;
-            btn.classList.replace('btn-success', 'btn-primary');
-        }, 2000);
+
     } catch (err) {
-        console.error('Error updating profile:', err);
-        showNotification('Error updating profile: ' + err.message, 'error');
-        btn.innerHTML = original;
-        btn.disabled = false;
+        console.error(err);
+        showNotification(err.message, 'error');
     }
+
+    btn.innerHTML = original;
+    btn.disabled = false;
+
 }
 function resetForm() {
     if (confirm('Discard changes?')) {
@@ -406,17 +507,47 @@ function resetForm() {
         showNotification('Form reset successfully', 'info');
     }
 }
+function initializeForm() {
+  const form = document.getElementById("updateProfileForm");
+
+  if (!form) return; // 🔥 important
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    updateProfile();
+  });
+}
+// DELETE OLD FILE FIRST
+async function deleteOldFile(path) {
+  if (!path) return;
+  await supabase.storage.from("user-documents").remove([path]);
+}
+function setupImagePreview(inputId, previewId) {
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+
+  if (!input || !preview) return;
+
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    }
+  });
+}
 
 // Booking actions
 function viewBookingDetails(bookingId) {
     const booking = userBookings.find(b => b.id === bookingId);
-    if (!booking) return;
 
-    // Create modal or navigate to details page
+    if (!booking) {
+        showNotification("Booking not found", "error");
+        return;
+    }
+
     showBookingModal(booking);
 }
-
-
 
 function closeBookingModal() {
     const modal = document.getElementById('bookingModal');
@@ -425,51 +556,31 @@ function closeBookingModal() {
     }
 }
 
-async function cancelBooking(bookingId) {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
-
-    try {
+function cancelBooking(bookingId) {
+  showConfirmModal(
+    "Cancel Booking",
+    "Are you sure you want to cancel this booking?",
+    async () => {
+      try {
         const { error } = await supabase
-            .from('bookings')
-            .update({ booking_status: 'cancelled' })
-            .eq('id', bookingId);
+          .from('bookings')
+          .update({ booking_status: 'cancelled' })
+          .eq('id', bookingId);
 
         if (error) throw error;
 
-        // Refresh bookings
         userBookings = await getUserBookings();
         populateUserBookings();
-        
-        showNotification('Booking cancelled successfully', 'success');
 
-    } catch (error) {
-        console.error('Error cancelling booking:', error);
-        showNotification('Error cancelling booking: ' + error.message, 'error');
+        showNotification("Booking cancelled successfully", "success");
+
+      } catch (error) {
+        showNotification(error.message, "error");
+      }
     }
+  );
 }
 
-async function cancelBooking(bookingId) {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
-
-    try {
-        const { error } = await supabase
-            .from('bookings')
-            .update({ booking_status: 'cancelled' })
-            .eq('id', bookingId);
-
-        if (error) throw error;
-
-        // Refresh bookings
-        userBookings = await getUserBookings();
-        populateUserBookings();
-        
-        showNotification('Booking cancelled successfully', 'success');
-
-    } catch (error) {
-        console.error('Error cancelling booking:', error);
-        showNotification('Error cancelling booking: ' + error.message, 'error');
-    }
-}
 
 // Download Invoice Function with jsPDF
 async function downloadInvoice(bookingId) {
@@ -823,4 +934,115 @@ function initializeForm() {
 
 function attachEventListeners() {
   // optional future use
+}
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("updateProfileForm");
+    if (form) {
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            updateProfile();
+        });
+    }
+});
+
+
+
+function previewImage(input, previewId) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    document.getElementById(previewId).src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// listeners
+document.getElementById("profileImage")?.addEventListener("change", function () {
+  previewImage(this, "profilePreview");
+});
+
+document.getElementById("licenseImage")?.addEventListener("change", function () {
+  previewImage(this, "licensePreview");
+});
+
+document.getElementById("aadhaarImage")?.addEventListener("change", function () {
+  previewImage(this, "aadhaarPreview");
+});
+let confirmCallback = null;
+
+function showConfirmModal(title, message, onConfirm) {
+  document.getElementById("confirmTitle").innerText = title;
+  document.getElementById("confirmMessage").innerText = message;
+
+  confirmCallback = onConfirm;
+
+  document.getElementById("confirmModal").classList.add("active");
+}
+
+function closeConfirmModal() {
+  document.getElementById("confirmModal").classList.remove("active");
+}
+
+document.getElementById("confirmOkBtn").addEventListener("click", () => {
+  if (confirmCallback) confirmCallback();
+  closeConfirmModal();
+});
+function showNotification(message, type = 'info') {
+  const colors = {
+    success: '#10b981',
+    error: '#ef4444',
+    info: '#2563eb'
+  };    
+
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    background: ${colors[type]};
+    color: white;
+    border-radius: 10px;
+    z-index: 9999;
+    font-weight: 500;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease;
+  `;
+
+  notification.innerText = message;
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.style.animation = 'slideOutRight 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 4000);
+}function showConfirmModal(title, message, onConfirm) {
+  const modal = document.getElementById("confirmModal");
+  const titleEl = document.getElementById("confirmTitle");
+  const msgEl = document.getElementById("confirmMessage");
+  const okBtn = document.getElementById("confirmOkBtn");
+
+  if (!modal || !titleEl || !msgEl || !okBtn) {
+    console.error("Confirm modal elements missing");
+    return;
+  }
+
+  titleEl.innerText = title;
+  msgEl.innerText = message;
+
+  modal.classList.add("active");
+
+  okBtn.onclick = () => {
+    onConfirm();
+    closeConfirmModal();
+  };
+}
+
+function closeConfirmModal() {
+  const modal = document.getElementById("confirmModal");
+  modal?.classList.remove("active");
 }
